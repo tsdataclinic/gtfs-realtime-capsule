@@ -12,6 +12,13 @@ There are 3 main design goals:
 
 The goal is to complete in Spring 2023 and migrate the existing data lakes over the summer.
 
+### How to test local lambdas
+
+- create a launch.json with the event payload?
+- look at how i tested it in the rail sign stack (think it was just a "run current python file")
+- deploy it and get the logs from awslogs
+
+
 ## Useful commands
 
  * `cdk ls`          list all stacks in the app

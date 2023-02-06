@@ -8,3 +8,4 @@ gtfs-realtime-bindings
 git+https://git@github.com/wearefair/protobuf-to-dict
 jinja2
 pyyaml
+boto3

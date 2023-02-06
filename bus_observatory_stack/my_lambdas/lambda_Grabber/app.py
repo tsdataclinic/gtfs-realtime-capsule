@@ -1,30 +1,25 @@
-# import os
+import datetime as dt
+import boto3
+import os
 import json
-from .parsers import *
-# import parsers.GTFSRT as GTFSRT
-# import parsers.CleverDevicesXML as CleverDevicesXML
-# import parsers.SIRI as SIRI
-
+from .parsers import GTFSRT, CleverDevicesXML, SIRI
+from pandas import DataFrame
 
 def lambda_handler(event, context):
 
-    # FIXME: get config from the event
-    # {"Parameters": {"name":"test"}, "ContainerOverrides": { "Command": ["echo","Ref::name"] } }
+    # get config from the passed event
     region = event['REGION']
-    config = event['Parameters']
-    bucket = config['S3_BUCKET']
-    system_id = config['SYSTEM_ID']
+    bucket_name = event['Parameters']['bucket_name']
+    feed_config = event['Parameters']['feed_config']
+    system_id = event['Parameters']['system_id']
 
     # fetch + parse data
-    feed = Feed(config, system_id)
+    feed = Feed(feed_config, system_id)
     positions_df = feed.scrape_feed()
 
-    # FIXME: write a new dumper function that takes a df and writes it to s3
     # dump to S3 as parquet
-    dump_buses(region,
-               bucket,
-               system_id,
-               positions_df)
+    datalake = DataLake(region,bucket_name,system_id)
+    datalake.dump_buses(positions_df)
 
     # report summary
     return {
@@ -42,7 +37,7 @@ class Feed:
         self.feed_type = config['feed_type']
         self.timestamp_key = config['timestamp_key']
         self.route_key = config['route_key']
-        self.tz = config['tz']
+        # self.tz = config['tz']
 
         # fields that may be present
         try:
@@ -79,3 +74,31 @@ class Feed:
 
     def scrape_feed(self):
         return self.__class__.dispatch[self.feed_type](self)
+
+
+class DataLake:
+    def __init__(self, bucket_name: str, system_id: str, region: str) -> None:
+        self.bucket_name = bucket_name
+        self.system_id = system_id
+        self.region = region
+
+    def dump_buses(self, positions_df: DataFrame):
+
+        # dump to instance ephemeral storage
+        timestamp = dt.datetime.now().replace(microsecond=0)
+        filename=f"{self.system_id}_{timestamp}.parquet".replace(" ", "_").replace(":", "_")
+
+        positions_df.to_parquet(f"/tmp/{filename}", times='int96')
+
+        # upload to S3
+        source_path=f"/tmp/{filename}"
+        remote_path=f"lake/{self.system_id}/incoming/{filename}"
+        session = boto3.Session(region_name=self.region)
+        s3 = session.resource('s3')
+        result = s3.Bucket(self.bucket_name).upload_file(source_path,remote_path)
+
+        # clean up /tmp
+        try:
+            os.remove(source_path)
+        except:
+            pass

@@ -62,14 +62,9 @@ class BusObservatoryGrabber(Construct):
 
         # CONFIGURE SCHEDULED EVENTS
 
-        #TODO: params
-        params = {
-            "bucket_name" : bucket.bucket_name,
-            "system_id" : "test",
-            "feed_config" : "test"
-        }
+        #TEST PARAMS -- Australian GTFS-RT feed
 
-        test_feed_params = {
+        test_feed = {
             "tfnsw_bus": {
                 "publish": "True",
                 "system_name": "Transport for New South Wales",
@@ -88,6 +83,13 @@ class BusObservatoryGrabber(Construct):
                 "notes": "Sampled once per minute. We parse all fields in this feed."
                 }
             }
+        feed = test_feed
+
+        params = {
+            "bucket_name" : bucket.bucket_name,
+            "system_id" : next(iter(feed.keys())), # get the first (only) key
+            "feed_config" : feed
+        }
 
         # create a rule, runs every 1 minute
         rule = events.Rule(
@@ -97,24 +99,14 @@ class BusObservatoryGrabber(Construct):
             targets = [
                 targets.LambdaFunction(
                     handler,
-                    event=events.RuleTargetInput.from_object(test_feed_params)
+                    event=events.RuleTargetInput.from_object(params)
                     )
                 ]
         )
 
 
-
-        # #TODO: then figure out how to configure many with a loop
+        #FIXME: now iterate over the feeds
         # events = []
         # for feed in feeds:
-
-        #     params = {
-        #         "bucket_name" : bucket.bucket_name,
-        #         "system_id" : feed['system_id'],
-        #         "feed_config" : feed
-        #         }
-
-        #     #TODO: insert workign code from above
-
-        #     # add it to the list
+        #     #TODO: insert working code from above
         #     events.append(rule)
