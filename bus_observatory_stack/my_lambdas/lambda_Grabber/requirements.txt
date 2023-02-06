@@ -1,0 +1,10 @@
+trio
+asks
+requests
+pandas
+fastparquet
+protobuf==3.20.1
+gtfs-realtime-bindings
+git+https://git@github.com/wearefair/protobuf-to-dict
+jinja2
+pyyaml
