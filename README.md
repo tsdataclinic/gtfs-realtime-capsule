@@ -18,6 +18,12 @@ The goal is to complete in Spring 2023 and migrate the existing data lakes over 
 - look at how i tested it in the rail sign stack (think it was just a "run current python file")
 - deploy it and get the logs from awslogs
 
+### resources
+
+look at AWS Solutions Constructs
+https://docs.aws.amazon.com/solutions/latest/constructs/aws-eventbridge-lambda.html
+
+https://catalog.us-east-1.prod.workshops.aws/workshops/697be460-9224-4b82-99e2-5103b900ed4e/en-US/030-build/034-code-walkthrough
 
 ## Useful commands
 

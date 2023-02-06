@@ -27,20 +27,13 @@ def get_buses(feed):
     except KeyError:
         pass
     
-    # convert timestamp is 4 steps to get local time recorded properly in parquet
+    # record as UTC local time
     
     # 1 convert POSIX timestamp to datetime
     positions_df['vehicle.timestamp'] = pd.to_datetime(positions_df['vehicle.timestamp'], unit="s")
     
     # 2 tell pandas its UTC
     positions_df['vehicle.timestamp'] = positions_df['vehicle.timestamp'].dt.tz_localize('UTC')
-    
-    # 3 convert the offset to local time
-    positions_df['vehicle.timestamp'] = positions_df['vehicle.timestamp'].dt.tz_convert(feed.tz)
-    # positions_df['vehicle.timestamp'] = positions_df['vehicle.timestamp'].dt.tz_convert(feed.config['tz'])
-    
-    # 4 make naive again (not sure why this is needed)
-    positions_df['vehicle.timestamp'] = positions_df['vehicle.timestamp'].dt.tz_localize(None)
     
     
     return positions_df

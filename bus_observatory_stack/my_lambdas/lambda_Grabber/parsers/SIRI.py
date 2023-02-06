@@ -88,6 +88,14 @@ def parse_buses(fetches):
                 pass
     positions_df = pd.DataFrame([vars(x) for x in buses])
     positions_df['timestamp'] = positions_df['timestamp'].dt.tz_localize(None)
+
+    # #FIXME: record as UTC local time
+    # # 1 convert POSIX timestamp to datetime
+    # positions_df['vehicle.timestamp'] = pd.to_datetime(positions_df['vehicle.timestamp'], unit="s")
+    
+    # # 2 tell pandas its UTC
+    # positions_df['vehicle.timestamp'] = positions_df['vehicle.timestamp'].dt.tz_localize('UTC')
+
     return positions_df
 
 class BusObservation():
