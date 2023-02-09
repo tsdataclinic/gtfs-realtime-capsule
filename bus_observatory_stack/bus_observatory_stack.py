@@ -11,7 +11,6 @@ from bus_observatory_stack.my_constructs.Lake import BusObservatoryLake
 from bus_observatory_stack.my_constructs.Grabber import BusObservatoryGrabber
 from bus_observatory_stack.my_constructs.API import BusObservatoryAPI
 
-
 class BusObservatoryStack(Stack):
 
     def __init__(
@@ -30,10 +29,8 @@ class BusObservatoryStack(Stack):
 
         ###########################################################
         # S3 BUCKET
-        # get or create the bucket once and
-        # pass it to all the constructs
         ###########################################################
-        bucket = s3.Bucket(self, bucket_name)
+        bucket = s3.Bucket.from_bucket_name(self, bucket_name, bucket_name)
 
         ###########################################################
         # SCHEDULED GRABBERS
@@ -43,6 +40,7 @@ class BusObservatoryStack(Stack):
         grabber = BusObservatoryGrabber(
             self,
             "BusObservatoryGrabber",
+            region="us-east-1", #FIXME: this shouldnt be hardcoded but above doesnt seem to work with 'self.region'
             bucket=bucket,
             feeds=feeds
         )
@@ -56,6 +54,7 @@ class BusObservatoryStack(Stack):
         # #TODO: lake
         # lake = BusObservatoryLake(self,
         # "BusObservatoryLake",
+        # region=self.region,
         # bucket = bucket,
         # feeds=feeds
         # )
@@ -70,6 +69,7 @@ class BusObservatoryStack(Stack):
         # api = BusObservatoryAPI(
         #     self,
         #     "BusObservatoryAPI",
+        #     region=self.region,
         #     bucket = bucket,
         #     feeds = feeds
         #     )

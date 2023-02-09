@@ -15,7 +15,7 @@ class Feed:
         self.feed_type = self.feed_config["feed_type"]
         self.timestamp_key = self.feed_config["timestamp_key"]
         self.route_key = self.feed_config["route_key"]
-        # self.tz = config["tz"]
+        self.tz = self.feed_config["tz"]
 
         # fields that may be present
         try:
@@ -53,7 +53,6 @@ class Feed:
     def scrape_feed(self):
         return self.__class__.dispatch[self.feed_type](self)
 
-
 class DataLake:
     def __init__(self, region: str, bucket_name: str, system_id: str) -> None:
         self.bucket_name = bucket_name
@@ -81,21 +80,20 @@ class DataLake:
         except:
             pass
 
-
-def lambda_handler(event, context):
+def handler(event, context):
 
     # get config from the passed event
-    region = event["REGION"]
-    bucket_name = event["Parameters"]["bucket_name"]
-    system_id = event["Parameters"]["system_id"]
-    feed_config = event["Parameters"]["feed_config"][system_id]
+    region = event["region"]
+    bucket_name = event["bucket_name"]
+    system_id = event["system_id"]
+    feed_config = event["feed_config"]
 
     # fetch + parse data
     feed = Feed(feed_config, system_id)
     positions_df = feed.scrape_feed()
 
     # dump to S3 as parquet
-    datalake = DataLake(region,bucket_name,system_id)
+    datalake = DataLake(region, bucket_name, system_id)
     datalake.dump_buses(positions_df)
 
     # report summary
@@ -114,32 +112,7 @@ def lambda_handler(event, context):
 
 if __name__ == "__main__":
     context = None
-    event = {
-        "REGION": "us-east-1",
-        "Parameters": {
-            "bucket_name": "busobservatory-2",
-            "system_id": "tfnsw_bus",
-            "feed_config": {
-                "tfnsw_bus": {
-                    "publish": "True",
-                    "system_name": "Transport for New South Wales",
-                    "city_name": "Sydney, NSW, AU",
-                    "feed_type": "gtfsrt",
-                    "url": "https://api.transport.nsw.gov.au/v1/gtfs/vehiclepos/buses",
-                    "api_key": "HTHniGwUwxSJoty8T3kQTtBtd9jxBl8QFyws",
-                    "header": "True",
-                    "header_format": {
-                        "key_name": "Authorization",
-                        "template": "apikey {key_value}"
-                        },
-                    "route_key": "vehicle.trip.route_id",
-                    "timestamp_key": "vehicle.timestamp",
-                    "tz": "Australia/Sydney",
-                    "notes": "Sampled once per minute. We parse all fields in this feed."
-                    }
-                }
-            }
-        }
-    lambda_handler(event, context)
+    event = json.load(open("test_event.json"))
+    handler(event, context)
 
 

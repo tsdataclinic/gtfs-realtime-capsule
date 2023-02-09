@@ -1,0 +1,27 @@
+{
+    "region": "us-east-1",
+    "detail": {
+        "bucket_name": "busobservatory-2",
+        "system_id": "tfnsw_bus",
+        "feed_config": {
+            "tfnsw_bus": {
+                "publish": "True",
+                "system_name": "Transport for New South Wales",
+                "city_name": "Sydney, NSW, AU",
+                "feed_type": "gtfsrt",
+                "url": "https://api.transport.nsw.gov.au/v1/gtfs/vehiclepos/buses",
+                "api_key": "HTHniGwUwxSJoty8T3kQTtBtd9jxBl8QFyws",
+                "header": "True",
+                "header_format": {
+                    "key_name": "Authorization",
+                    "template": "apikey {key_value}"
+                    },
+                "route_key": "vehicle.trip.route_id",
+                "timestamp_key": "vehicle.timestamp",
+                "tz": "Australia/Sydney",
+                "notes": "Sampled once per minute. We parse all fields in this feed."
+                }
+            }
+        }
+    }
+    

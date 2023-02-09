@@ -1,0 +1,301 @@
+Resources:
+  BusObservatoryGrabberBusObservatoryGrabberLambdaServiceRole58670C57:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - Fn::Join:
+            - ""
+            - - "arn:"
+              - Ref: AWS::Partition
+              - :iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatoryGrabber_Lambda/ServiceRole/Resource
+  BusObservatoryGrabberBusObservatoryGrabberLambdaServiceRoleDefaultPolicyC9DE1C84:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - s3:Abort*
+              - s3:DeleteObject*
+              - s3:GetBucket*
+              - s3:GetObject*
+              - s3:List*
+              - s3:PutObject
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionTagging
+            Effect: Allow
+            Resource:
+              - arn:aws:s3:::busobservatory-2
+              - arn:aws:s3:::busobservatory-2/*
+        Version: "2012-10-17"
+      PolicyName: BusObservatoryGrabberBusObservatoryGrabberLambdaServiceRoleDefaultPolicyC9DE1C84
+      Roles:
+        - Ref: BusObservatoryGrabberBusObservatoryGrabberLambdaServiceRole58670C57
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatoryGrabber_Lambda/ServiceRole/DefaultPolicy/Resource
+  BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: cdk-hnb659fds-assets-870747888580-us-east-1
+        S3Key: c79affd3284e51f7723295e47db3e03228b5acc1210b20e1747ab92341f26ab7.zip
+      Role:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberLambdaServiceRole58670C57
+          - Arn
+      Handler: app.handler
+      Runtime: python3.8
+      Timeout: 60
+    DependsOn:
+      - BusObservatoryGrabberBusObservatoryGrabberLambdaServiceRoleDefaultPolicyC9DE1C84
+      - BusObservatoryGrabberBusObservatoryGrabberLambdaServiceRole58670C57
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatoryGrabber_Lambda/Resource
+      aws:asset:path: asset.c79affd3284e51f7723295e47db3e03228b5acc1210b20e1747ab92341f26ab7
+      aws:asset:is-bundled: true
+      aws:asset:property: Code
+  BusObservatoryGrabberBusObservatoryGrabberRuletfnswbus8B8469E0:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: BusObservatoryStack Grabber Rule for tfnsw_bus
+      ScheduleExpression: rate(1 minute)
+      State: ENABLED
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+              - Arn
+          Id: Target0
+          Input: '{"region":"us-east-1","bucket_name":"busobservatory-2","system_id":"tfnsw_bus","feed_config":{"publish":"True","system_name":"Transport for New South Wales","city_name":"Sydney, NSW, AU","feed_type":"gtfsrt","url":"https://api.transport.nsw.gov.au/v1/gtfs/vehiclepos/buses","api_key":"HTHniGwUwxSJoty8T3kQTtBtd9jxBl8QFyws","header":"True","header_format":{"key_name":"Authorization","template":"apikey {key_value}"},"route_key":"vehicle.trip.route_id","timestamp_key":"vehicle.timestamp","tz":"Australia/Sydney","notes":"Sampled once per minute. We parse all fields in this feed."}}'
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_tfnsw_bus/Resource
+  BusObservatoryGrabberBusObservatoryGrabberRuletfnswbusAllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778A4F01C37:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+          - Arn
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberRuletfnswbus8B8469E0
+          - Arn
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_tfnsw_bus/AllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778
+  BusObservatoryGrabberBusObservatoryGrabberRulenyctmtabussiriF081FB5D:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: BusObservatoryStack Grabber Rule for nyct_mta_bus_siri
+      ScheduleExpression: rate(1 minute)
+      State: ENABLED
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+              - Arn
+          Id: Target0
+          Input: '{"region":"us-east-1","bucket_name":"busobservatory-2","system_id":"nyct_mta_bus_siri","feed_config":{"publish":"True","system_name":"New York City Transit (SIRI)","city_name":"New York City, NY, US","feed_type":"siri","url":"http://gtfsrt.prod.obanyc.com/vehiclePositions?key={}","api_key":"088886bd-cc48-4d7c-bd8a-498d353d7d13","header":"False","route_key":"route","timestamp_key":"timestamp","tz":"America/New_York","notes":"Sampled once per minute. We parse all fields in this feed."}}'
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_nyct_mta_bus_siri/Resource
+  BusObservatoryGrabberBusObservatoryGrabberRulenyctmtabussiriAllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778537EACBC:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+          - Arn
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberRulenyctmtabussiriF081FB5D
+          - Arn
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_nyct_mta_bus_siri/AllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778
+  BusObservatoryGrabberBusObservatoryGrabberRulenyctmtabusgtfsrt423EC7A1:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: BusObservatoryStack Grabber Rule for nyct_mta_bus_gtfsrt
+      ScheduleExpression: rate(1 minute)
+      State: ENABLED
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+              - Arn
+          Id: Target0
+          Input: '{"region":"us-east-1","bucket_name":"busobservatory-2","system_id":"nyct_mta_bus_gtfsrt","feed_config":{"publish":"True","system_name":"New York City Transit (GTFS-RT)","city_name":"New York City, NY, US","feed_type":"gtfsrt","url":"http://gtfsrt.prod.obanyc.com/vehiclePositions?key={}","api_key":"088886bd-cc48-4d7c-bd8a-498d353d7d13","header":"False","route_key":"vehicle.trip.route_id","timestamp_key":"vehicle.timestamp","tz":"America/New_York","notes":"Sampled once per minute. Note that coverage of some fields is not available for all periods. The passenger_count and next_stop* fields are not available before May 2021."}}'
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_nyct_mta_bus_gtfsrt/Resource
+  BusObservatoryGrabberBusObservatoryGrabberRulenyctmtabusgtfsrtAllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778FBC145E4:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+          - Arn
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberRulenyctmtabusgtfsrt423EC7A1
+          - Arn
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_nyct_mta_bus_gtfsrt/AllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778
+  BusObservatoryGrabberBusObservatoryGrabberRulenjtransitbusC94FD5CF:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: BusObservatoryStack Grabber Rule for njtransit_bus
+      ScheduleExpression: rate(1 minute)
+      State: ENABLED
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+              - Arn
+          Id: Target0
+          Input: '{"region":"us-east-1","bucket_name":"busobservatory-2","system_id":"njtransit_bus","feed_config":{"publish":"True","system_name":"NJTransit","city_name":"NJ, US","feed_type":"njxml","url":"http://mybusnow.njtransit.com/bustime/map/getBusesForRouteAll.jsp","header":"False","route_key":"rt","timestamp_key":"timestamp","tz":"America/New_York","notes":"Sampled once per minute. This feed is based on an old technology and returns an XML response. We parse most of the fields in this feed, but most of them are undocumented."}}'
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_njtransit_bus/Resource
+  BusObservatoryGrabberBusObservatoryGrabberRulenjtransitbusAllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778177E0C02:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+          - Arn
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberRulenjtransitbusC94FD5CF
+          - Arn
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_njtransit_bus/AllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778
+  BusObservatoryGrabberBusObservatoryGrabberRulembtaallDD19B0E4:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: BusObservatoryStack Grabber Rule for mbta_all
+      ScheduleExpression: rate(1 minute)
+      State: ENABLED
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+              - Arn
+          Id: Target0
+          Input: '{"region":"us-east-1","bucket_name":"busobservatory-2","system_id":"mbta_all","feed_config":{"publish":"True","system_name":"Massachusetts Bay Transit Authority","city_name":"Boston, MA, US","feed_type":"gtfsrt","url":"https://cdn.mbta.com/realtime/VehiclePositions.pb","header":"False","route_key":"vehicle.trip.route_id","timestamp_key":"vehicle.timestamp","tz":"America/New_York","notes":"Sampled once per minute, inlcudes buses and trolleys. We parse all fields in this feed."}}'
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_mbta_all/Resource
+  BusObservatoryGrabberBusObservatoryGrabberRulembtaallAllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778A75098F3:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+          - Arn
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberRulembtaallDD19B0E4
+          - Arn
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_mbta_all/AllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778
+  BusObservatoryGrabberBusObservatoryGrabberRulewmatabusB00699EB:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: BusObservatoryStack Grabber Rule for wmata_bus
+      ScheduleExpression: rate(1 minute)
+      State: ENABLED
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+              - Arn
+          Id: Target0
+          Input: '{"region":"us-east-1","bucket_name":"busobservatory-2","system_id":"wmata_bus","feed_config":{"publish":"True","system_name":"Washington Metropolitan Area Transit Authority","city_name":"Washington, DC, US","feed_type":"gtfsrt","url":"https://api.wmata.com/gtfs/bus-gtfsrt-vehiclepositions.pb","api_key":"600a6e5ded8a45cdbc1a014094e97eee","header":"True","header_format":{"key_name":"api_key","template":"600a6e5ded8a45cdbc1a014094e97eee"},"route_key":"vehicle.trip.route_id","timestamp_key":"vehicle.timestamp","tz":"America/New_York","notes":"Sampled once per minute. We parse all fields in this feed."}}'
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_wmata_bus/Resource
+  BusObservatoryGrabberBusObservatoryGrabberRulewmatabusAllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA47784A47FA99:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+          - Arn
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberRulewmatabusB00699EB
+          - Arn
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_wmata_bus/AllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778
+  BusObservatoryGrabberBusObservatoryGrabberRulesfmuni99E43331:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: BusObservatoryStack Grabber Rule for sf_muni
+      ScheduleExpression: rate(1 minute)
+      State: ENABLED
+      Targets:
+        - Arn:
+            Fn::GetAtt:
+              - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+              - Arn
+          Id: Target0
+          Input: '{"region":"us-east-1","bucket_name":"busobservatory-2","system_id":"sf_muni","feed_config":{"publish":"True","system_name":"San Francisco Transportation Agency","city_name":"San Francisco, CA, US","feed_type":"gtfsrt","url":"https://api.511.org/transit/vehiclepositions?api_key={}&agency=SF","api_key":"bb24580d-aab4-4b2a-9722-508ffd4bc5ad","header":"False","route_key":"vehicle.trip.route_id","timestamp_key":"vehicle.timestamp","tz":"America/Los_Angeles","notes":"Sampled once per minute. We parse all fields in this feed."}}'
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_sf_muni/Resource
+  BusObservatoryGrabberBusObservatoryGrabberRulesfmuniAllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778D242A506:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberLambdaF5A76662
+          - Arn
+      Principal: events.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+          - BusObservatoryGrabberBusObservatoryGrabberRulesfmuni99E43331
+          - Arn
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_sf_muni/AllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778
+  CDKMetadata:
+    Type: AWS::CDK::Metadata
+    Properties:
+      Analytics: v2:deflate64:H4sIAAAAAAAA/zWP0W7CMAxFv6XvjoFW4nkwiWfUfQAKwYDXNEF1sglF+felafd0fO0r+7rFfYupbfSvKHMblOUrpq+gzQCldUnS4TGagcJRCwHrEVPvLcHn3VWevWXznuVSZZDuokUoCB5mgNXj9aYxFcspOhPYu2qnaWSRojLQD7niT31cNxfmDD2Jj5MhqItKqAe7R52vgwyt0vb11LhtPtYPNjOXm+r1Dk/vVsu5iv8IGRa96XC3xX3zLcxqii7wSNgv/AO7iGNxHAEAAA==
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/CDKMetadata/Default
+Parameters:
+  BootstrapVersion:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /cdk-bootstrap/hnb659fds/version
+    Description: Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]
+Rules:
+  CheckBootstrapVersion:
+    Assertions:
+      - Assert:
+          Fn::Not:
+            - Fn::Contains:
+                - - "1"
+                  - "2"
+                  - "3"
+                  - "4"
+                  - "5"
+                - Ref: BootstrapVersion
+        AssertDescription: CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.
+
