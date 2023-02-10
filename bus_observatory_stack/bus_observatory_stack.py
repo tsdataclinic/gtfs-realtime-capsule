@@ -22,6 +22,9 @@ class BusObservatoryStack(Stack):
 
         super().__init__(scope, construct_id, **kwargs)
 
+        #FIXME: hardcoded region
+        aws_region = "us-east-1"
+
         ###########################################################
         # LOAD CONFIG
         ###########################################################
@@ -40,36 +43,36 @@ class BusObservatoryStack(Stack):
         grabber = BusObservatoryGrabber(
             self,
             "BusObservatoryGrabber",
-            region="us-east-1", #FIXME: this shouldnt be hardcoded but above doesnt seem to work with 'self.region'
+            region=aws_region, #FIXME: this shouldnt be hardcoded but above doesnt seem to work with 'self.region'
             bucket=bucket,
             feeds=feeds
         )
 
-        ###########################################################
+        ##########################################################
         # DATA LAKE
         # crawlers
         # crawl schedule
         # governed tables for each folder/feed
-        ###########################################################
-        # #TODO: lake
-        # lake = BusObservatoryLake(self,
-        # "BusObservatoryLake",
-        # region=self.region,
-        # bucket = bucket,
-        # feeds=feeds
-        # )
 
-        ###########################################################
+        lake = BusObservatoryLake(
+            self,
+            "BusObservatoryLake",
+             region=aws_region,
+             bucket = bucket,
+             feeds=feeds
+             )
+
+        # ##########################################################
         # API
         # lambda handler
         # gateway
         # custom domain
-        ###########################################################
+        # ##########################################################
         # #TODO: api
         # api = BusObservatoryAPI(
         #     self,
         #     "BusObservatoryAPI",
-        #     region=self.region,
+        #     region=aws_region
         #     bucket = bucket,
         #     feeds = feeds
         #     )
