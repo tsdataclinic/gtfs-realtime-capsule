@@ -11,6 +11,7 @@ from bus_observatory_stack.my_constructs.Lake import BusObservatoryLake
 from bus_observatory_stack.my_constructs.Grabber import BusObservatoryGrabber
 from bus_observatory_stack.my_constructs.API import BusObservatoryAPI
 
+#FIXME: add termination protection when time to deploy to production
 class BusObservatoryStack(Stack):
 
     def __init__(

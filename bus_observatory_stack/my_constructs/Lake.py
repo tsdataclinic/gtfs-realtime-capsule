@@ -5,10 +5,10 @@ from constructs import Construct
 from aws_cdk import (
     Duration,
     aws_s3 as s3,
-    aws_glue as glue_,
+    aws_glue as glue,
     aws_glue_alpha as glue_alpha_,
     aws_iam as iam_,
-    aws_lakeformation as lakeformation_,
+    aws_lakeformation as lakeformation,
 )
 
 
@@ -37,10 +37,12 @@ class BusObservatoryLake(Construct):
                 actions=[
                     's3:GetObject', 
                     's3:PutObject', 
-                    'lakeformation:GetDataAccess',
-                    'lakeformation:CreateDatabase',
-                    'lakeformation:CreateTable',
-                    'lakeformation:CreateTableWithColumns'
+                    #FIXME: if this works, its way too permissive
+                    'lakeformation:*',
+                    # 'lakeformation:GetDataAccess',
+                    # 'lakeformation:CreateDatabase',
+                    # 'lakeformation:CreateTable',
+                    # 'lakeformation:CreateTableWithColumns'
                     ], 
                 effect=iam_.Effect.ALLOW, 
                 resources=['*']
@@ -74,7 +76,7 @@ class BusObservatoryLake(Construct):
         }
         configuration_str = json.dumps(configuration)
 
-        glue_.CfnCrawler(
+        glue.CfnCrawler(
             self, 
             f"{bucket.bucket_name}-crawler",
             name=f"BusObservatoryStack_{bucket.bucket_name}_crawler",
@@ -87,38 +89,48 @@ class BusObservatoryLake(Construct):
         )
 
 
-        # # When your AWS Lake Formation Data catalog settings is not set to 
-        # # "Use only IAM access control for new databases" or
-        # # "Use only IAM access control for new tables in new databse"
-        # # you need to grant additional permission to the data catalog database. 
-        # # in order for the crawler to run, we need to add some permissions to lakeformation
+        # When your AWS Lake Formation Data catalog settings is not set to 
+        # "Use only IAM access control for new databases" or
+        # "Use only IAM access control for new tables in new databse"
+        # you need to grant additional permission to the data catalog database. 
+        # in order for the crawler to run, we need to add some permissions to lakeformation
 
-        # #FIXME: https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_lakeformation/CfnResource.html
-        # location_resource = lakeformation_.CfnResource(
-        #     self, 
-        #     f"{bucket.bucket_name}_DatalakeLocationResource",
-        #     resource_arn= bucket.bucket_arn,
-        #     use_service_linked_role=True
-        # )
+        location_resource = lakeformation.CfnResource(
+            self, 
+            f"{bucket.bucket_name}_DatalakeLocationResource",
+            resource_arn= bucket.bucket_arn,
+            use_service_linked_role=True
+        )
 
-        # #FIXME: https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_lakeformation/CfnPermissions.html
-        # #FIXME: https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_lakeformation/CfnPermissions.html#datalakeprincipalproperty
-        # #FIXME: https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_lakeformation/CfnPermissions.html#resourceproperty
-        # lakeformation_.CfnPermissions(
-        #     self, 
-        #     f"{bucket.bucket_name}_DatalakeDatabasePermission",
-        #     data_lake_principal=lakeformation_.CfnPermissions.DataLakePrincipalProperty(data_lake_principal_identifier=glue_role.role_arn),
-        #     resource=lakeformation_.CfnPermissions.ResourceProperty(database_resource=lakeformation_.CfnPermissions.DatabaseResourceProperty(name=db.database_name)),
-        #     permissions=["ALTER", "DROP", "CREATE_TABLE"],
-        # )
+        lakeformation.CfnPermissions(
+            self, 
+            f"{bucket.bucket_name}_DatalakeDatabasePermission",
+            data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(data_lake_principal_identifier=glue_role.role_arn),
+            resource=lakeformation.CfnPermissions.ResourceProperty(database_resource=lakeformation.CfnPermissions.DatabaseResourceProperty(name=db.database_name)),
+            permissions=["ALTER", "DROP", "CREATE_TABLE"],
+        )
 
-        # location_permission = lakeformation_.CfnPermissions(
-        #     self, 
-        #     f"{bucket.bucket_name}_DatalakeLocationPermission",
-        #     data_lake_principal=lakeformation_.CfnPermissions.DataLakePrincipalProperty(data_lake_principal_identifier=glue_role.role_arn),
-        #     resource=lakeformation_.CfnPermissions.ResourceProperty(data_location_resource=lakeformation_.CfnPermissions.DataLocationResourceProperty(s3_resource=bucket.bucket_arn)),
-        #         permissions=["DATA_LOCATION_ACCESS"],
-        #     )
+        # FIXME: this doesnt deploy
+        location_permission = lakeformation.CfnPermissions(
+            self, 
+            f"{bucket.bucket_name}_DatalakeLocationPermission",
+            data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(
+                data_lake_principal_identifier=glue_role.role_arn
+                ),
+            resource=lakeformation.CfnPermissions.ResourceProperty(
+                data_location_resource=lakeformation.CfnPermissions.DataLocationResourceProperty(s3_resource=bucket.bucket_arn)
+                ),
+                permissions=["DATA_LOCATION_ACCESS"],
+            )
 
-        # #make sure the location resource is created first
-        # location_permission.node.add_dependency(location_resource)
+        #make sure the location resource is created first
+        location_permission.node.add_dependency(location_resource)
+
+
+
+        #FIXME: none of my tables show up in lakeformation
+
+        #FIXME: make sure tables are governed by lakeformation
+        # "TableType":"GOVERNED",
+        # check compaction status
+        # aws list-table-storage-optimizers --database-name database-name --table-name table-name

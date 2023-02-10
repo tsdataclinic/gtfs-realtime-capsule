@@ -1,25 +1,5 @@
 # BusObservatory-Stack
 
-## TODO list
-
-- deploy / debug grabber
-    - S3 write errors
-    - NJXML parser
-    - SIRI parser
-    - timestamps should all be UTC (check outputs of all 3 parsers)
-- create Lake
-    - read first -- Sample Data Lake built in CDK https://catalog.us-east-1.prod.workshops.aws/workshops/697be460-9224-4b82-99e2-5103b900ed4e/en-US/030-build/034-code-walkthrough
-    - creates a governed db lakeformation
-    - crawler
-        - single crawler: create a table for each folder in the lake (e.g. even for ones with deactivated grabbers)
-        - feed-specific-crawlers: or get list from feeds.json and create a separate crawler for each?
-- migrate API
-    - deploys the API lambda
-        - localize timestamps after get query results
-    - creates a gateway
-    - maps custom domain to the gateway
-
-
 ## February 2023
 
 This is a prototype fully-managed stack to replace the existing collection of SAM lambdas and independently managed reosurces (S3, EventBridge rules, Route53 records, Glue crawlers and databases etc.)

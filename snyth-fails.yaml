@@ -48,7 +48,7 @@ Resources:
     Properties:
       Code:
         S3Bucket: cdk-hnb659fds-assets-870747888580-us-east-1
-        S3Key: c79affd3284e51f7723295e47db3e03228b5acc1210b20e1747ab92341f26ab7.zip
+        S3Key: 4f051faea915bbacf1b88aabc5b630141840a270034161dbd9e647b982984352.zip
       Role:
         Fn::GetAtt:
           - BusObservatoryGrabberBusObservatoryGrabberLambdaServiceRole58670C57
@@ -61,7 +61,7 @@ Resources:
       - BusObservatoryGrabberBusObservatoryGrabberLambdaServiceRole58670C57
     Metadata:
       aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatoryGrabber_Lambda/Resource
-      aws:asset:path: asset.c79affd3284e51f7723295e47db3e03228b5acc1210b20e1747ab92341f26ab7
+      aws:asset:path: asset.4f051faea915bbacf1b88aabc5b630141840a270034161dbd9e647b982984352
       aws:asset:is-bundled: true
       aws:asset:property: Code
   BusObservatoryGrabberBusObservatoryGrabberRuletfnswbus8B8469E0:
@@ -274,10 +274,110 @@ Resources:
           - Arn
     Metadata:
       aws:cdk:path: BusObservatoryStack/BusObservatoryGrabber/BusObservatory_Grabber_Rule_sf_muni/AllowEventRuleBusObservatoryStackBusObservatoryGrabberBusObservatoryGrabberLambda29FA4778
+  BusObservatoryLakeglueroleADCB5DC8:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: glue.amazonaws.com
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryLake/glue_role/Resource
+  BusObservatoryLakeglueroleDefaultPolicyE7F2F6C4:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - lakeformation:*
+              - s3:GetObject
+              - s3:PutObject
+            Effect: Allow
+            Resource: "*"
+        Version: "2012-10-17"
+      PolicyName: BusObservatoryLakeglueroleDefaultPolicyE7F2F6C4
+      Roles:
+        - Ref: BusObservatoryLakeglueroleADCB5DC8
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryLake/glue_role/DefaultPolicy/Resource
+  BusObservatoryLakebusobservatory2Database876DC76A:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: "870747888580"
+      DatabaseInput:
+        Name: busobservatory-2
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryLake/busobservatory-2_Database/Resource
+  BusObservatoryLakebusobservatory2crawlerB7BF25BE:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Role:
+        Fn::GetAtt:
+          - BusObservatoryLakeglueroleADCB5DC8
+          - Arn
+      Targets:
+        S3Targets:
+          - Path: s3://busobservatory-2/feeds/
+      Configuration: '{"Version": 1.0, "Grouping": {"TableGroupingPolicy": "CombineCompatibleSchemas", "TableLevelConfiguration": 3}}'
+      DatabaseName: busobservatory-2
+      Name: BusObservatoryStack_busobservatory-2_crawler
+      RecrawlPolicy:
+        RecrawlBehavior: CRAWL_NEW_FOLDERS_ONLY
+      Schedule:
+        ScheduleExpression: cron(0/30 * * * ? *)
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryLake/busobservatory-2-crawler
+  BusObservatoryLakebusobservatory2DatalakeLocationResource8F3C4A1A:
+    Type: AWS::LakeFormation::Resource
+    Properties:
+      ResourceArn: arn:aws:s3:::busobservatory-2
+      UseServiceLinkedRole: true
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryLake/busobservatory-2_DatalakeLocationResource
+  BusObservatoryLakebusobservatory2DatalakeDatabasePermissionB1D135F0:
+    Type: AWS::LakeFormation::Permissions
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier:
+          Fn::GetAtt:
+            - BusObservatoryLakeglueroleADCB5DC8
+            - Arn
+      Resource:
+        DatabaseResource:
+          Name:
+            Ref: BusObservatoryLakebusobservatory2Database876DC76A
+      Permissions:
+        - ALTER
+        - DROP
+        - CREATE_TABLE
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryLake/busobservatory-2_DatalakeDatabasePermission
+  BusObservatoryLakebusobservatory2DatalakeLocationPermission1176A0AD:
+    Type: AWS::LakeFormation::Permissions
+    Properties:
+      DataLakePrincipal:
+        DataLakePrincipalIdentifier:
+          Fn::GetAtt:
+            - BusObservatoryLakeglueroleADCB5DC8
+            - Arn
+      Resource:
+        DataLocationResource:
+          S3Resource: arn:aws:s3:::busobservatory-2
+      Permissions:
+        - DATA_LOCATION_ACCESS
+    DependsOn:
+      - BusObservatoryLakebusobservatory2DatalakeLocationResource8F3C4A1A
+    Metadata:
+      aws:cdk:path: BusObservatoryStack/BusObservatoryLake/busobservatory-2_DatalakeLocationPermission
   CDKMetadata:
     Type: AWS::CDK::Metadata
     Properties:
-      Analytics: v2:deflate64:H4sIAAAAAAAA/zWP0W7CMAxFv6XvjoFW4nkwiWfUfQAKwYDXNEF1sglF+felafd0fO0r+7rFfYupbfSvKHMblOUrpq+gzQCldUnS4TGagcJRCwHrEVPvLcHn3VWevWXznuVSZZDuokUoCB5mgNXj9aYxFcspOhPYu2qnaWSRojLQD7niT31cNxfmDD2Jj5MhqItKqAe7R52vgwyt0vb11LhtPtYPNjOXm+r1Dk/vVsu5iv8IGRa96XC3xX3zLcxqii7wSNgv/AO7iGNxHAEAAA==
+      Analytics: v2:deflate64:H4sIAAAAAAAA/1VQy27DIBD8Ft8xSW2p6rFNqp4j9wOiNdk41DwiFhpFiH8vYDdqT7PDzs7O0vHnjseugRu14jS3So48fnoQM8tPx0g93wUxo98BIZOgeRysQrY/m4oHq6S4F7pUiVF/BCL0xN8KMAV6PAGPWfIRjPDSmipHpyVRZonhN5qsj0NYnTMmNqmAdewdPIxlfa73Dm4KXcq2M56t01AMq2xAssEJ/O9OKbFHpybK103STOzPSGJdC+p6Ab5tXtev2BSMS/r2evcXa1bNoZLHMSXn2vlNmncuok3Pn7b8pfkiKVsXjJca+bDgD8Xh/2h7AQAA
     Metadata:
       aws:cdk:path: BusObservatoryStack/CDKMetadata/Default
 Parameters:
