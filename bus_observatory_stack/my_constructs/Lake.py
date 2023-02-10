@@ -36,13 +36,8 @@ class BusObservatoryLake(Construct):
             iam_.PolicyStatement(
                 actions=[
                     's3:GetObject', 
-                    's3:PutObject', 
-                    #FIXME: if this works, its way too permissive
-                    'lakeformation:*',
-                    # 'lakeformation:GetDataAccess',
-                    # 'lakeformation:CreateDatabase',
-                    # 'lakeformation:CreateTable',
-                    # 'lakeformation:CreateTableWithColumns'
+                    's3:PutObject',
+                    'lakeformation:*' #FIXME: this doesnt seem to help
                     ], 
                 effect=iam_.Effect.ALLOW, 
                 resources=['*']
@@ -58,15 +53,12 @@ class BusObservatoryLake(Construct):
         )
 
 
-        # Step 3. create a crawler named "fitsdatalakecrawler-<hex>", and schedule to run every 15 mins
-        # You can change the frequency based on your needs
-        # cron schedule format cron(Minutes Hours Day-of-month Month Day-of-week Year) 
+        # Step 3. create a crawler and schedule to run every 30 mins
+        # only crawling new folders at 3rd level of bucket
+        # e.g. s3://bucket_name/feeds/nyct_mta_bus_siri/
 
-        #FIXME: update the scheudle to cron(0 2 * * ? *) after testing is done to run every day at 2am
         target_s3_path = f"s3://{bucket.bucket_name}/feeds/"
 
-        # configure the crawler to create tables based on 2nd level of folder structure 
-        # e.g. s3://bucket_name/feeds/nyct_mta_bus_siri/
         configuration = {
             "Version": 1.0,
             "Grouping": {
@@ -87,7 +79,6 @@ class BusObservatoryLake(Construct):
             recrawl_policy={"recrawlBehavior": "CRAWL_NEW_FOLDERS_ONLY"},
             configuration= configuration_str
         )
-
 
         # When your AWS Lake Formation Data catalog settings is not set to 
         # "Use only IAM access control for new databases" or
@@ -110,7 +101,7 @@ class BusObservatoryLake(Construct):
             permissions=["ALTER", "DROP", "CREATE_TABLE"],
         )
 
-        # FIXME: this doesnt deploy
+        # FIXME: this doesnt deploy — appears blocked by AWS Organizations (AT has a ticket out as of 2023-02-10)
         location_permission = lakeformation.CfnPermissions(
             self, 
             f"{bucket.bucket_name}_DatalakeLocationPermission",
@@ -126,11 +117,8 @@ class BusObservatoryLake(Construct):
         #make sure the location resource is created first
         location_permission.node.add_dependency(location_resource)
 
-
-
-        #FIXME: none of my tables show up in lakeformation
-
-        #FIXME: make sure tables are governed by lakeformation
-        # "TableType":"GOVERNED",
+        #FIXME: verify tables are governed / compaction is active
         # check compaction status
         # aws list-table-storage-optimizers --database-name database-name --table-name table-name
+        # need to add to crawler settings? "TableType":"GOVERNED",
+        #FIXME: how to set the compaction schedule?
