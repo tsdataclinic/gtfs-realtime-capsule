@@ -4,9 +4,8 @@ from aws_cdk import (
 )
 from constructs import Construct
 import json
+import boto3
 
-# TODO: this should be simpler
-# TODO: from my_constructs import BusObservatoryLake
 from bus_observatory_stack.my_constructs.Lake import BusObservatoryLake
 from bus_observatory_stack.my_constructs.Grabber import BusObservatoryGrabber
 from bus_observatory_stack.my_constructs.API import BusObservatoryAPI
@@ -27,14 +26,22 @@ class BusObservatoryStack(Stack):
         aws_region = "us-east-1"
 
         ###########################################################
-        # LOAD CONFIG
-        ###########################################################
-        feeds = json.load(open("feeds.json"))
-
-        ###########################################################
         # S3 BUCKET
         ###########################################################
         bucket = s3.Bucket.from_bucket_name(self, bucket_name, bucket_name)
+
+        ###########################################################
+        # LOAD + UPLOAD CONFIG
+        ###########################################################
+
+        client = boto3.client('s3')
+        client.upload_file("feeds.json", bucket_name, "feed/feeds.json")
+
+        # load the config back memory for use in the rest of the stack
+        response = client.get_object(Bucket=bucket_name, Key="feed/feeds.json")
+        feeds = json.loads(response['Body'].read().decode('utf-8'))
+        # instead of reading it off the disk
+        # feeds = json.load(open("feeds.json"))
 
         ###########################################################
         # SCHEDULED GRABBERS
@@ -59,7 +66,7 @@ class BusObservatoryStack(Stack):
             self,
             "BusObservatoryLake",
              region=aws_region,
-             bucket = bucket,
+             bucket=bucket,
              feeds=feeds
              )
 
@@ -69,11 +76,13 @@ class BusObservatoryStack(Stack):
         # gateway
         # custom domain
         # ##########################################################
-        # #TODO: api
-        # api = BusObservatoryAPI(
-        #     self,
-        #     "BusObservatoryAPI",
-        #     region=aws_region
-        #     bucket = bucket,
-        #     feeds = feeds
-        #     )
+        #TODO: api
+        
+        api = BusObservatoryAPI(
+            self,
+            "BusObservatoryAPI",
+            region=aws_region,
+            bucket=bucket,
+            feeds=feeds
+        )
+    

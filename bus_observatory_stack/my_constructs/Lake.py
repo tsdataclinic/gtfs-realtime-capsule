@@ -101,21 +101,21 @@ class BusObservatoryLake(Construct):
             permissions=["ALTER", "DROP", "CREATE_TABLE"],
         )
 
-        # FIXME: this doesnt deploy — appears blocked by AWS Organizations (AT has a ticket out as of 2023-02-10)
-        location_permission = lakeformation.CfnPermissions(
-            self, 
-            f"{bucket.bucket_name}_DatalakeLocationPermission",
-            data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(
-                data_lake_principal_identifier=glue_role.role_arn
-                ),
-            resource=lakeformation.CfnPermissions.ResourceProperty(
-                data_location_resource=lakeformation.CfnPermissions.DataLocationResourceProperty(s3_resource=bucket.bucket_arn)
-                ),
-                permissions=["DATA_LOCATION_ACCESS"],
-            )
+        # # FIXME: this doesnt deploy — appears blocked by AWS Organizations (AT has a ticket out as of 2023-02-10)
+        # location_permission = lakeformation.CfnPermissions(
+        #     self, 
+        #     f"{bucket.bucket_name}_DatalakeLocationPermission",
+        #     data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(
+        #         data_lake_principal_identifier=glue_role.role_arn
+        #         ),
+        #     resource=lakeformation.CfnPermissions.ResourceProperty(
+        #         data_location_resource=lakeformation.CfnPermissions.DataLocationResourceProperty(s3_resource=bucket.bucket_arn)
+        #         ),
+        #         permissions=["DATA_LOCATION_ACCESS"],
+        #     )
 
-        #make sure the location resource is created first
-        location_permission.node.add_dependency(location_resource)
+        # #make sure the location resource is created first
+        # location_permission.node.add_dependency(location_resource)
 
         #FIXME: verify tables are governed / compaction is active
         # check compaction status

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}NJTransit{% endblock %}
+{% block head %}
+{{ super() }}
+
+{% endblock %}
+
+{% block page_content %}
+
+<main role="main">
+
+  <div class="jumbotron">
+    <div class="container">
+      <h1 class="display-4">NJTransit</h1>
+      <h3 class="display-5"><pre>njtransit_bus</pre></h3>
+      <p>NJTransit provides data through an unofficial API through its telematics vendor Clever Devices. </p>
+      
+    </div>
+  </div>
+
+  <div class="container">
+
+    <div class="row">
+      <div class="col-md-12">
+        {{markdown.text|safe}}
+      </div>
+    </div> <!-- /row -->
+
+    <hr>
+
+  </div>
+
+</main>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+
+{% endblock %}
+
+
+
+

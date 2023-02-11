@@ -26,6 +26,21 @@ The goal is to complete in Spring 2023 and migrate the existing data lakes over 
 
 AWS Solutions Constructs https://docs.aws.amazon.com/solutions/latest/constructs/aws-eventbridge-lambda.html
 
+## How Configuration is handled
+
+### At deployment
+
+- `feeds.json` is copied from the root of this repo to the `s3://bucket/feeds/` folder.
+- it is then loaded back into memory and used to generate and configure the Grabber events during synth
+
+### For the Grabber
+- the config for each feed is hard-coded in its lambda event
+
+### For the API
+- the config is read from the S3 object on each invocation (this is slow, can add ~150ms latency)
+
+### ideas to improve
+1. store it in a dynamodb, but it doesnt really suppport nested JSON out of the box
 
 
 ## Useful commands

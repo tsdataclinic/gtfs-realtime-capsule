@@ -1,0 +1,29 @@
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top bg-light">
+    <a class="navbar-brand" href="/">Bus Observatory API</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarText">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item active">
+          <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="http://example.com" id="dropdown01" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Feeds</a>
+          <div class="dropdown-menu" aria-labelledby="dropdown01">
+            {% for system_id, system_info in config.items() %}
+              <a class="dropdown-item" href="/{{system_id}}/schema">{{system_info.system_name}}</a>
+            {% endfor %}
+          </div>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/docs">Try It</a>
+        </li>
+      </ul>
+      <span class="navbar-text">
+        Cornell Tech
+      </span>
+    </div>
+  </nav>
+
+

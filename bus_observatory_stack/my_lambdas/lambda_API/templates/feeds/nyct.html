@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}New York City Transit{% endblock %}
+{% block head %}
+{{ super() }}
+
+{% endblock %}
+
+{% block page_content %}
+
+<main role="main">
+
+  <div class="jumbotron">
+    <div class="container">
+      <h1 class="display-4">New York City Transit</h1>
+      <h3 class="display-5"><pre>nyct_mta_bus_siri</pre></h3>
+      <p>New York City Transit's BusTime system provides bus monitoring data through two different feeds, a rich feed based on the older SIRI standard and a more sparse feed based on the widely-used GTFS-RT standard. We currently provide access to the SIRI feed, with GTFS-RT data coming soon.</p>
+      
+    </div>
+  </div>
+
+  <div class="container">
+
+    <div class="row">
+      <div class="col-md-12">
+        {{markdown.text|safe}}
+      </div>
+    </div> <!-- /row -->
+
+    <hr>
+
+  </div>
+
+</main>
+
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+
+{% endblock %}
+
+
+
+

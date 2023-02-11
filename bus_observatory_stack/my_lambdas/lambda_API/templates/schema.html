@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Bus Observatory{% endblock %}
+
+{% block head %}
+{{ super() }}
+{% endblock %}
+
+{% block page_content %}
+
+<main role="main">
+  <div class="container my-5">
+
+    <!-- header bar -->
+    <div class="row my-5" id="feedname"> 
+      <div class="col-md-8" >
+        <div class="jrWyDr title h1 ">{{feed_info.city_name}}</div>
+        <div class="jrWyDr title subtitle h1 "><pre>{{system_id}}</pre></div>
+        <p>
+          {{ feed_info.notes }}
+        </p>
+      </div>
+      <div class="col-md-4">
+        <a class="nav-link" href="/docs"></a><button type="button" class="btn btn-primary">Try It</button></div></a>
+      </div>
+
+    <!-- schema table -->
+    <div class="row my-5"> 
+      <div class="col-md-12">
+        <table class="table table-hover table-sm ">
+          <div class="jrWyDr title h1 ">Schema</div>
+          <thead class="thead-light">
+
+            <tr>
+              <th scope="col">field</th>
+              <th scope="col">type</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in schema %}
+            <tr>
+              <td>{{row.Name}}</td>
+              <td>{{row.Type}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+
+    <!-- system_history inventory -->
+    <div class="row my-5"> 
+      <div class="col-md-12">
+        <table class="table table-hover table-sm ">
+          <div class="jrWyDr title h1 ">History</div>
+          <thead class="thead-light">
+            <tr>
+              <th scope="col">year</th>
+              <th scope="col">month</th>
+              <th scope="col">day</th>
+              <th scope="col">no. of observations</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in history %}
+            <tr>
+              <td>{{row.y}}</td>
+              <td>{{row.m}}</td>
+              <td>{{row.d}}</td>
+              <td>{{row.ct | format_number }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <!-- route inventory 
+    <div class="row my-5"> 
+      <div class="col-md-12">
+        <table class="table table-hover table-sm ">
+          <div class="jrWyDr title h1 ">Inventory</div>
+          <thead class="thead-light">
+            <tr>
+              <th scope="col">route</th>
+              <th scope="col">no. of observations</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in routelist %}
+            <tr>
+              <td>{{row['vehicle.trip.route_id']}}</td>
+              <td>{{row._col1}}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    -->
+
+  </div> <!-- /container -->
+</main>
+
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+
+{% endblock %}
+
+
+
+

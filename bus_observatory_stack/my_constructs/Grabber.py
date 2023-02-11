@@ -12,19 +12,16 @@ from aws_cdk import (
 
 
 class BusObservatoryGrabber(Construct):
-    def __init__(self, scope: Construct, id: str, region: str, bucket: s3.Bucket, feeds: list, **kwargs):
+    def __init__(self, scope: Construct, id: str, region: str, bucket: s3.Bucket, feeds: dict, **kwargs):
 
         super().__init__(scope, id, **kwargs)
-
-        # S3 BUCKET
-        # passed as 'bucket'
 
         # CREATE THE GRABBER LAMBDA
         # this will build and package an env using entry folder requirements.txt without need for layers
 
         handler = _lambda_alpha.PythonFunction(
             self,
-            "BusObservatoryGrabber_Lambda",
+            "BusObservatoryStack_Grabber_Lambda",
             entry="bus_observatory_stack/my_lambdas/lambda_Grabber",
             runtime=_lambda.Runtime.PYTHON_3_8,
             index="app.py",
@@ -32,7 +29,6 @@ class BusObservatoryGrabber(Construct):
             timeout=Duration.seconds(60),
         )
 
-        #FIXME: for some reasons the bucket name is getting mangled or not loading the existing bucket
         #grant write access to handler on source bucket
         bucket.grant_read_write(handler.role)
 

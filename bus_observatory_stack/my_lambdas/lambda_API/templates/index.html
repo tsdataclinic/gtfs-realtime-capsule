@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Bus Observatory{% endblock %}
+
+{% block head %}
+{{ super() }}
+{% endblock %}
+
+{% block page_content %}
+
+<main role="main">
+  <div class="container-fluid banner">
+
+      <!-- Main jumbotron -->
+      <div class="jumbotron bg-cover" style="background-image: linear-gradient(to bottom, rgba(255,255,255,0.65) 0%,rgba(255,255,255,0.95) 100%), url(/static/map-nyc-sm.jpg)">
+
+      <div class="container ">
+        <h1 class="display-4">Better data means better buses.</h1>
+        <p class="lead">The Bus Observatory is a public archive of real-time data on vehicle movements and status, collected from transit systems around the world. This free service is provided by the <a href="https://urban.tech.cornell.edu/">Jacobs Urban Tech Hub</a> at <a href="https://tech.cornell.edu/">Cornell Tech</a>. 
+        </p>
+      </div>
+    </div>
+  </div> <!-- container -->
+
+
+  <div class="container">
+    
+    <div class="row mt-5"> 
+      <div class="col-md-12" id="whofor">
+        <h2>Who is it for?</h2>
+        <hr>
+      </div>
+    </div>
+
+    <div class="row mb-5">
+      <div class="col-md-4">
+        <h3>Researchers</h3>
+        <p>Longitudinal, multi-city data can inform investigations in  factors that impact bus system performance, and other influences that determine ridership.</p>
+      </div>
+      <div class="col-md-4">
+        <h3>Students</h3>
+        <p>
+          Cornell Tech students have <a href="https://medium.com/bus-watching/from-sensing-to-sensemaking-analyzing-visualizing-and-modeling-new-york-citys-buses-896bb42cf39f">made</a> everything from maps to machine-learning models from our data. What can you do?</p>
+      </div>
+      <div class="col-md-4">
+        <h3>Advocates</h3>
+        <p>Data was the driver for Transit Center's highly effective <a href="http://busturnaround.nyc/">Bus Turnaround</a> campaign in New York City. Power your campaign with big bus data.</p>
+      </div>
+    </div>
+
+    <!-- Quickstart -->
+    <div class="row mt-5"> 
+      <div class="col-md-12" id="quickstart">
+        <h2>Get Started</h2>
+        <hr>
+
+        <p>We collect bulk bus position data from transit systems around the world, sampled at one-minute intervals. The Bus Observatory API allows you to query and retrieve this data one "route-hour" at a time (60 minutes worth of observations for a single route).</p>
+
+            <h3>1. Download A Sample Data Set</h3>
+            <p>We have prepared several data sets for data science explorations. All are extracted from the New York City Transit SIRI feed (<code>nyct_mta_bus_siri</code>):</p>
+            <ul>
+              <li><b>One route-day.</b> July 5, 2022. M1 route only. (<a href="https://urbantech-public.s3.amazonaws.com/DONT_DELETE/api.busobservatory.org%E2%80%94sampledata/nyct_mta_buses_siri.M1.2022-07-05-daily.csv.tar.gz">CSV.tar.gz</a>)</li>
+              <li><b>One route-month.</b> July 1-31, 2022. M1 route only. (<a href="https://urbantech-public.s3.amazonaws.com/DONT_DELETE/api.busobservatory.org%E2%80%94sampledata/nyct_mta_buses_siri.M1.2022-07-monthly.csv.tar.gz">CSV.tar.gz</a>)</li>
+              <li><b>One system-hour.</b> July 7, 2022. All routes. (<a href="https://urbantech-public.s3.amazonaws.com/DONT_DELETE/api.busobservatory.org%E2%80%94sampledata/nyct_mta_buses_siri.all_routes.2022-07-07-08-hourly.csv.tar.gz">CSV.tar.gz</a>)</li>
+              <li><b>One system-day.</b> July 5, 2022. All routes. (<a href="https://urbantech-public.s3.amazonaws.com/DONT_DELETE/api.busobservatory.org%E2%80%94sampledata/nyct_mta_buses_siri.all_routes.2022-07-05-daily.csv.tar.gz">CSV.tar.gz</a>)</li>
+              <li><b>One system-month.</b> July 1-31, 2022. All routes. (<a href="https://urbantech-public.s3.amazonaws.com/DONT_DELETE/api.busobservatory.org%E2%80%94sampledata/nyct_mta_buses_siri.all_routes.2022-07-monthly.csv.tar.gz">CSV.tar.gz</a>)</li>
+            </ul>
+
+            <h3>2. Try A Query</h3>
+            <ul>
+              <li>Browse the list of active feeds in the table below, and make note of the <code>system_id</code>.</li>
+              <li>Visit the Bus Observatory API's <a href="/docs">Swagger utility</a>, and click "Try It Out". Enter the <code>system_id</code>, a route name or number from that system, and a year, month, day, and hour.</li>
+            </ul>
+
+            <table class="table table-hover table-sm my-2">
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Place</th>
+                  <th scope="col">system_id</th>
+                  <th scope="col">Type & Schema</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for system_id, system_info in config.items() %}
+                <tr>
+                  <!-- <th scope="row">{{system_id}}</th> -->
+                  <td>{{system_info.system_name}}</td>
+                  <td>{{system_info.city_name}}</td>
+                  <td>{{system_id}}</td>
+                  <td><a href="/{{system_id}}/schema">{{system_info.feed_type}}</a></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+
+      </div>
+    </div>
+
+    <!-- guide -->
+    <div class="row  my-5">
+      <div class="col-md-12" id="docs">
+        <h2>Next Steps</h2>
+        <hr>
+
+        <h3>3. Review the Data License</h3>
+        <p>All data is licensed under a  <a href="http://creativecommons.org/licenses/by-nc/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" style="display: inline-block;">CC BY-NC 4.0 license</a>. Please review the license terms before using this data.</p>
+
+        <h3>4. Query the API Directly</h3>
+
+        <p>Data can also be accessed directly via the API endpoint. The format is:</p>
+
+        <code>
+          https://api.busobservatory.org/buses/bulk/{system_id}/{route}/{year}/{month}/{day}/{hour}
+        </code>
+
+        <p>For example, to get all of the positions recorded from the New York City MTA Buses SIRI feed between 9pm and 10pm on October 4, 2022, go to <a href="https://api.busobservatory.org/buses/bulk/nyct_mta_bus_siri/M1/2022/10/4/21">https://api.busobservatory.org/buses/bulk/nyct_mta_bus_siri/M1/2022/7/10/21</a>.<p>
+
+        <p>Or, send a request from a command line using <code>curl</code>:</p>
+
+
+
+        <!--[ Code Box 2 ]-->
+<div class='K2_CBox'>
+  <div class='CB_Heading'>
+    <span>API via CLI</span>
+    <button id='copy2' class='C_box_main' onclick="copyC('copy2','code2')">
+      <i class='CBox_icn'></i>
+    </button>
+  </div>
+
+  <div id='code2'>
+<pre>
+curl -X 'GET' \
+    'https://api.busobservatory.org/buses/bulk/nyct_mta_bus_siri/M1/2022/7/4/21' \
+    -H 'accept: application/json'
+</pre>
+</div>
+</div>
+        <h3>5. Get Sequences of Data</h3>
+
+        <p>To retrieve more route-hour bulk data sets, you can request sequences or sets of route-hours. For example, the following Python function:
+          <ol>
+            <li>takes a <code>system_id</code>, <code>route</code>, and <code>start</code> and <code>end</code> time (in ISO8501 format) as arguments,</li>
+            <li>generates a list of dates and hours within this interval,</li>
+            <li>retrieves the bulk data for each our from the Bus Observatory API, and</li>
+            <li>combines these responses into a single Pandas dataframe.</li>
+          </ol> 
+          
+
+
+
+<!--[ Code Box 1 ]-->
+<div class='K2_CBox'>
+  <div class='CB_Heading'>
+    <span>Download to DataFrame</span>
+    <button id='copy1' class='C_box_main' onclick="copyC('copy1','code1')">
+      <i class='CBox_icn'></i>
+    </button>
+  </div>
+
+  <!--Add Your Parse HTML code Here-->
+  <div id='code1'>
+    <pre>
+import pandas as pd
+import requests
+
+def get_buses(system_id, route, start, end):
+
+    df = pd.DataFrame()
+
+    times = (pd.date_range(start=pd.Timestamp(start), end=pd.Timestamp(end), freq="1H")
+        .to_pydatetime()
+        .tolist()
+    )
+
+    for t in times:
+        url = f"https://api.busobservatory.org/buses/bulk/{system_id}/{route}/{t.year}/{t.month}/{t.day}/{t.hour}"
+        r = requests.get(url).json()
+        newdata = pd.DataFrame.from_dict(r["result"])
+        df = pd.concat([df, newdata], ignore_index=True, sort=False)
+    
+        return df
+      
+    </pre>
+  </div>
+</div>
+
+
+          <p> Then, grabbing a whole day's data for a single route, and writing it to a single parquet file from the results is as simple as:</p>
+
+<!--[ Code Box 3 ]-->
+<div class='K2_CBox'>
+  <div class='CB_Heading'>
+    <span>Get A Data Sequence</span>
+    <button id='copy3' class='C_box_main' onclick="copyC('copy3','code3')">
+      <i class='CBox_icn'></i>
+    </button>
+  </div>
+
+  <div id='code3'>
+          <pre>
+get_buses(
+    'nyct_mta_bus_siri', 
+    'M1', 
+    '2022-07-21T00:00:00',
+    '2022-07-22T00:00:00'
+    ).to_parquet('buses.parquet')
+</pre>
+</div>
+</div>
+
+      </div>
+    </div> <!-- /row -->
+
+    <!-- Misc -->
+    <div class="row my-5"> 
+      <div class="col-md-12" id="feeds">
+        <h2>Notes</h2>
+        <hr>
+
+        <h3>Latency & Cold Starts</h3>
+        <p>This service is implemented entirely through serverless technologies. It not intended to be a backend for web services. You may experience response times in excess of 60 seconds for bulk data requests.</p>
+
+        <h3>Rate Limiting</h3>
+        <p>API access is rate limited. If you receive a <code>429 Too Many Requests</code> error, please wait and try again later.</p>
+
+        <h3>Bugs</h3>
+        <p>Please <a href="https://forms.gle/pmhWFpx5FyRrKS7a7">report any problems</a> you have using the API.</p>
+
+      </div>
+    </div>
+
+  </div> <!-- /container -->
+</main>
+
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+
+
+{% endblock %}
+
+
+
+
