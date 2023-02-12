@@ -13,9 +13,34 @@ import boto3
 
 # load feed from S3
 def get_feeds(bucket_name):
-    client = boto3.client('s3')
-    response = client.get_object(Bucket=bucket_name, Key="feed/feeds.json")
-    feeds = json.loads(response['Body'].read().decode('utf-8'))
+    #FIXME: grab parameter data from parameter store matching "/{bucket-name}/feeds/*"
+    param_name_prefix = f"/{bucket_name}/feeds/"
+    ssm = boto3.client('ssm')
+    response = ssm.describe_parameters(
+        ParameterFilters=[
+            {
+                'Key': 'Name',
+                'Option': 'BeginsWith',
+                'Values': [param_name_prefix]
+                }
+            ]
+    )
+    #         ParameterFilters=[
+    #         {
+    #             'Key': 'Name',
+    #             'Option': 'BeginsWith',
+    #             'Values': ['/myapp/']
+    #             }
+    #         ]
+    # )
+
+    #TODO: reconstruct a feeds dict from the parameter store data
+    feeds = {}
+    for f in response['Parameters']:
+        feeds[f['Name']] = f['Value']
+
+    # parameter_names = [param['Name'] for param in response['Parameters']]
+
     return feeds
 
 def filter_feeds(feeds):

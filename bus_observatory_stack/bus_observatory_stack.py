@@ -32,23 +32,15 @@ class BusObservatoryStack(Stack):
         bucket = s3.Bucket.from_bucket_name(self, bucket_name, bucket_name)
 
         ###########################################################
-        # LOAD + UPLOAD CONFIG
+        # LOAD FEED CONFIG FROM DISK
         ###########################################################
-
-        client = boto3.client('s3')
-        client.upload_file("feeds.json", bucket_name, "feed/feeds.json")
-
-        # load the config back memory for use in the rest of the stack
-        response = client.get_object(Bucket=bucket_name, Key="feed/feeds.json")
-        feeds = json.loads(response['Body'].read().decode('utf-8'))
-        # instead of reading it off the disk
-        # feeds = json.load(open("feeds.json"))
-
+        feeds = json.load(open("feeds.json"))
+        
         ###########################################################
         # PARAMETER STORE
-        #FIXME: this is an alternative to storing config in the S3 bucket, 
-        # but might be a problem for large configs
+        # load the config from feeds.json and store it in parameter store
         ###########################################################
+
         paramstore = BusObservatoryParamStore(
             self,
             "BusObservatoryParamStore",
@@ -90,7 +82,6 @@ class BusObservatoryStack(Stack):
         # gateway
         # custom domain
         # ##########################################################
-        #TODO: api
         
         api = BusObservatoryAPI(
             self,

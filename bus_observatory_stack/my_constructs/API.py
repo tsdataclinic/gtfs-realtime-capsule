@@ -44,7 +44,7 @@ class BusObservatoryAPI(Construct):
         my_hosted_zone = route53.HostedZone.from_lookup(
             self,
             "BusObservatoryAPI_HostedZone",
-            domain_name="busobservatory.org" #FIXME: how to pass this in? ENV var?
+            domain_name="busobservatory.org" #FIXME: this should be stored in a parameter store
             )
 
         # create certificate

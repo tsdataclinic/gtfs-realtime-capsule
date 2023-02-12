@@ -1,11 +1,14 @@
-import os, logging, json
+import os, json
 import datetime as dt
 import boto3
 from pandas import DataFrame
 from parsers import GTFSRT, CleverDevicesXML, SIRI
 
+# logging for debugging
+import logging
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
+
 
 class Feed:
     def __init__(self, feed_config, system_id) -> None:
@@ -86,6 +89,7 @@ def handler(event, context):
     region = event["region"]
     bucket_name = event["bucket_name"]
     system_id = event["system_id"]
+    
     feed_config = event["feed_config"]
 
     # fetch + parse data

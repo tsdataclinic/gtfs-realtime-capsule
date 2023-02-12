@@ -9,8 +9,13 @@ from fastapi.templating import Jinja2Templates
 from mangum import Mangum
 from helpers import *
 
+# logging for debugging
+import logging
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
 #######################################################################
-# Load feeds from S3
+# Load feeds from Parameter Store
 #######################################################################
 feeds = get_feeds(os.environ['bucket'])
 dbname = os.environ['bucket']

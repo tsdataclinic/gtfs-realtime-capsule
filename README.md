@@ -28,24 +28,16 @@ The goal is to complete in Spring 2023 and migrate the existing data lakes over 
 
 # How Configuration is handled
 
-## FUTURE
-
 ## At deployment
-
-- `feeds.json` is loaded, and each feed is stored in an SSM Parameter with the format `/bucket-name/feeds/system-id` e.g. `/busobservatory-2/feeds/nyct_mta_bus_siri`
-
-
-## CURRENT
-### At deployment
-
-- `feeds.json` is copied from the root of this repo to the `s3://bucket/feeds/` folder.
-- it is then loaded back into memory and used to generate and configure the Grabber events during synth
+- `feeds.json` is loaded from the local disk
+- Lambda grabber events are configured using this data
+- the same feed config data is stored in an SSM Parameter with the format `/bucket-name/feeds/system-id` e.g. `/busobservatory-2/feeds/nyct_mta_bus_siri`
 
 ### For the Grabber
 - the config for each feed is hard-coded in its lambda event at deployment
 
 ### For the API
-- the config is read from the S3 object on each invocation (this is slow, can add ~150ms latency)
+- the config is read from the parameter store on each invocation
 
 
 # Useful commands

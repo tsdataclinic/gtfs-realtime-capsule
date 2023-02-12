@@ -1,3 +1,6 @@
+# HOWTO manage parameter store settings
+# https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html
+
 import json
 from constructs import Construct
 
@@ -10,10 +13,7 @@ class BusObservatoryParamStore(Construct):
     def __init__(self, scope: Construct, id: str, region: str, bucket, feeds: dict, **kwargs):
         super().__init__(scope, id, **kwargs)
 
-        # load the feeds
-        with open('feeds.json') as f:
-            feeds = json.load(f)
-
+        #TODO: make sure this overwrites existing values
         #Create SSM parameter for each feed
         for system_id, feed_config in feeds.items():
             ssm.StringParameter(
