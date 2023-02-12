@@ -1,6 +1,6 @@
-# BusObservatory-Stack
 
-## February 2023
+###### Febuary 2023
+# BusObservatory-Stack 
 
 This is a prototype fully-managed stack to replace the existing collection of SAM lambdas and independently managed reosurces (S3, EventBridge rules, Route53 records, Glue crawlers and databases etc.)
 
@@ -12,38 +12,43 @@ There are 3 main design goals:
 
 The goal is to complete in Spring 2023 and migrate the existing data lakes over the summer.
 
-### How to test local lambdas
+## How to test local lambdas
 - more info here https://stackoverflow.com/questions/64689865/debugging-lambda-locally-using-cdk-not-sam
 - embed a static test event and just pass it
 
-### how to view logs for lambdas
+## how to view logs for lambdas
 
 1. get list of log groups `awslogs groups`
 2. find the one that corresponds to the Stack ARN (output of `cdk deploy`)
 3. tail and follow the log group `aws logs tail --follow {group}`
 
-### resources
+## resources
 
-AWS Solutions Constructs https://docs.aws.amazon.com/solutions/latest/constructs/aws-eventbridge-lambda.html
+- AWS Solutions Constructs https://docs.aws.amazon.com/solutions/latest/constructs/aws-eventbridge-lambda.html
 
-## How Configuration is handled
+# How Configuration is handled
 
+## FUTURE
+
+## At deployment
+
+- `feeds.json` is loaded, and each feed is stored in an SSM Parameter with the format `/bucket-name/feeds/system-id` e.g. `/busobservatory-2/feeds/nyct_mta_bus_siri`
+
+
+## CURRENT
 ### At deployment
 
 - `feeds.json` is copied from the root of this repo to the `s3://bucket/feeds/` folder.
 - it is then loaded back into memory and used to generate and configure the Grabber events during synth
 
 ### For the Grabber
-- the config for each feed is hard-coded in its lambda event
+- the config for each feed is hard-coded in its lambda event at deployment
 
 ### For the API
 - the config is read from the S3 object on each invocation (this is slow, can add ~150ms latency)
 
-### ideas to improve
-1. store it in a dynamodb, but it doesnt really suppport nested JSON out of the box
 
-
-## Useful commands
+# Useful commands
 
  * `cdk ls`          list all stacks in the app
  * `cdk synth`       emits the synthesized CloudFormation template

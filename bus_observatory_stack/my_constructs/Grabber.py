@@ -12,7 +12,7 @@ from aws_cdk import (
 
 
 class BusObservatoryGrabber(Construct):
-    def __init__(self, scope: Construct, id: str, region: str, bucket: s3.Bucket, feeds: dict, **kwargs):
+    def __init__(self, scope: Construct, id: str, region: str, bucket, feeds: dict, **kwargs):
 
         super().__init__(scope, id, **kwargs)
 

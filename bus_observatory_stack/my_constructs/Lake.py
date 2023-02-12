@@ -13,7 +13,7 @@ from aws_cdk import (
 
 
 class BusObservatoryLake(Construct):
-    def __init__(self, scope: Construct, id: str, region: str, bucket: s3.Bucket, feeds: list, **kwargs):
+    def __init__(self, scope: Construct, id: str, region: str, bucket, feeds: list, **kwargs):
 
         super().__init__(scope, id, **kwargs)
 
@@ -117,8 +117,8 @@ class BusObservatoryLake(Construct):
         # #make sure the location resource is created first
         # location_permission.node.add_dependency(location_resource)
 
-        #FIXME: verify tables are governed / compaction is active
+        # FIXME: verify tables are governed / compaction is active
         # check compaction status
         # aws list-table-storage-optimizers --database-name database-name --table-name table-name
         # need to add to crawler settings? "TableType":"GOVERNED",
-        #FIXME: how to set the compaction schedule?
+        # FIXME: how to set the compaction schedule?

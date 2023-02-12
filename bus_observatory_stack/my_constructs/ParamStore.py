@@ -1,0 +1,24 @@
+import json
+from constructs import Construct
+
+from aws_cdk import (
+    aws_ssm as ssm,
+
+)
+
+class BusObservatoryParamStore(Construct):
+    def __init__(self, scope: Construct, id: str, region: str, bucket, feeds: dict, **kwargs):
+        super().__init__(scope, id, **kwargs)
+
+        # load the feeds
+        with open('feeds.json') as f:
+            feeds = json.load(f)
+
+        #Create SSM parameter for each feed
+        for system_id, feed_config in feeds.items():
+            ssm.StringParameter(
+                self, f"{bucket.bucket_name}-{system_id}",
+                parameter_name=f"/{bucket.bucket_name}/feeds/{system_id}",
+                string_value=json.dumps(feed_config),
+                tier=ssm.ParameterTier.STANDARD,
+            )

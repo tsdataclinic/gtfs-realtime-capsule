@@ -6,6 +6,7 @@ from constructs import Construct
 import json
 import boto3
 
+from bus_observatory_stack.my_constructs.ParamStore import BusObservatoryParamStore
 from bus_observatory_stack.my_constructs.Lake import BusObservatoryLake
 from bus_observatory_stack.my_constructs.Grabber import BusObservatoryGrabber
 from bus_observatory_stack.my_constructs.API import BusObservatoryAPI
@@ -44,6 +45,19 @@ class BusObservatoryStack(Stack):
         # feeds = json.load(open("feeds.json"))
 
         ###########################################################
+        # PARAMETER STORE
+        #FIXME: this is an alternative to storing config in the S3 bucket, 
+        # but might be a problem for large configs
+        ###########################################################
+        paramstore = BusObservatoryParamStore(
+            self,
+            "BusObservatoryParamStore",
+            region=aws_region,
+            bucket=bucket,
+            feeds=feeds
+        )
+
+        ###########################################################
         # SCHEDULED GRABBERS
         # create the lambda and configure scheduled event
         # for each feed
@@ -51,7 +65,7 @@ class BusObservatoryStack(Stack):
         grabber = BusObservatoryGrabber(
             self,
             "BusObservatoryGrabber",
-            region=aws_region, #FIXME: this shouldnt be hardcoded but above doesnt seem to work with 'self.region'
+            region=aws_region,
             bucket=bucket,
             feeds=feeds
         )
