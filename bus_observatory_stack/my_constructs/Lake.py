@@ -13,11 +13,12 @@ from aws_cdk import (
 
 
 class BusObservatoryLake(Construct):
-    def __init__(self, scope: Construct, id: str, region: str, bucket, feeds: list, **kwargs):
+    def __init__(self, scope: Construct, id: str, region: str, bucket_name, feeds: list, **kwargs):
 
         super().__init__(scope, id, **kwargs)
 
-        # S3 bucket construct passed in
+        # create a bucket object from existing bucket
+        bucket = s3.Bucket.from_bucket_name(self, f"{bucket_name}_Bucket", bucket_name=bucket_name)
 
         # create a glue crawler to build the data catalog
         # Step 1 . create a role for AWS Glue
@@ -101,21 +102,21 @@ class BusObservatoryLake(Construct):
             permissions=["ALTER", "DROP", "CREATE_TABLE"],
         )
 
-        # # FIXME: this doesnt deploy — appears blocked by AWS Organizations (AT has a ticket out as of 2023-02-10)
-        # location_permission = lakeformation.CfnPermissions(
-        #     self, 
-        #     f"{bucket.bucket_name}_DatalakeLocationPermission",
-        #     data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(
-        #         data_lake_principal_identifier=glue_role.role_arn
-        #         ),
-        #     resource=lakeformation.CfnPermissions.ResourceProperty(
-        #         data_location_resource=lakeformation.CfnPermissions.DataLocationResourceProperty(s3_resource=bucket.bucket_arn)
-        #         ),
-        #         permissions=["DATA_LOCATION_ACCESS"],
-        #     )
+        # FIXME: this doesnt deploy — appears blocked by AWS Organizations (AT has a ticket out as of 2023-02-10)
+        location_permission = lakeformation.CfnPermissions(
+            self, 
+            f"{bucket.bucket_name}_DatalakeLocationPermission",
+            data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(
+                data_lake_principal_identifier=glue_role.role_arn
+                ),
+            resource=lakeformation.CfnPermissions.ResourceProperty(
+                data_location_resource=lakeformation.CfnPermissions.DataLocationResourceProperty(s3_resource=bucket.bucket_arn)
+                ),
+                permissions=["DATA_LOCATION_ACCESS"],
+            )
 
-        # #make sure the location resource is created first
-        # location_permission.node.add_dependency(location_resource)
+        #make sure the location resource is created first
+        location_permission.node.add_dependency(location_resource)
 
         # FIXME: verify tables are governed / compaction is active
         # check compaction status

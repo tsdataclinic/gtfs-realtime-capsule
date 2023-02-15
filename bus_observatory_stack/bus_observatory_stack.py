@@ -72,7 +72,7 @@ class BusObservatoryStack(Stack):
             self,
             "BusObservatoryLake",
              region=aws_region,
-             bucket=bucket,
+             bucket_name=bucket.bucket_name,
              feeds=feeds
              )
 
