@@ -23,13 +23,11 @@ class BusObservatoryStack(Stack):
 
         super().__init__(scope, construct_id, **kwargs)
 
-        #FIXME: hardcoded region
-        aws_region = "us-east-1"
 
         ###########################################################
         # S3 BUCKET
         ###########################################################
-        bucket = s3.Bucket.from_bucket_name(self, bucket_name, bucket_name)
+        bucket = s3.Bucket(self, bucket_name, bucket_name=bucket_name)
 
         ###########################################################
         # LOAD FEED CONFIG FROM DISK
@@ -44,7 +42,7 @@ class BusObservatoryStack(Stack):
         paramstore = BusObservatoryParamStore(
             self,
             "BusObservatoryParamStore",
-            region=aws_region,
+            region=self.region,
             bucket=bucket,
             feeds=feeds
         )
@@ -57,7 +55,7 @@ class BusObservatoryStack(Stack):
         grabber = BusObservatoryGrabber(
             self,
             "BusObservatoryGrabber",
-            region=aws_region,
+            region=self.region,
             bucket=bucket,
             feeds=feeds
         )
@@ -71,7 +69,7 @@ class BusObservatoryStack(Stack):
         lake = BusObservatoryLake(
             self,
             "BusObservatoryLake",
-             region=aws_region,
+             region=self.region,
              bucket_name=bucket.bucket_name,
              feeds=feeds
              )
@@ -86,7 +84,7 @@ class BusObservatoryStack(Stack):
         api = BusObservatoryAPI(
             self,
             "BusObservatoryAPI",
-            region=aws_region,
+            region=self.region,
             bucket=bucket,
             feeds=feeds
         )

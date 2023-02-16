@@ -18,7 +18,7 @@ class BusObservatoryLake(Construct):
         super().__init__(scope, id, **kwargs)
 
         # create a bucket object from existing bucket
-        bucket = s3.Bucket.from_bucket_name(self, f"{bucket_name}_Bucket", bucket_name=bucket_name)
+        bucket = s3.Bucket.from_bucket_name(self, "BusObservatory_Bucket", bucket_name=bucket_name)
 
         # create a glue crawler to build the data catalog
         # Step 1 . create a role for AWS Glue
@@ -26,7 +26,7 @@ class BusObservatoryLake(Construct):
             assumed_by=iam_.ServicePrincipal('glue.amazonaws.com'),
             managed_policies= [iam_.ManagedPolicy.from_managed_policy_arn(
                 self, 
-                f"{bucket.bucket_name}_CrawlerGlueRole", 
+                "BusObservatory_CrawlerGlueRole", 
                 managed_policy_arn='arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole'
                 )
             ]
@@ -49,7 +49,7 @@ class BusObservatoryLake(Construct):
         # Step 2. create a database named after the bucket name
         db=glue_alpha_.Database(
             self, 
-            f"{bucket.bucket_name}_Database",
+            "BusObservatory_Database",
             database_name=bucket.bucket_name
         )
 
@@ -71,8 +71,8 @@ class BusObservatoryLake(Construct):
 
         glue.CfnCrawler(
             self, 
-            f"{bucket.bucket_name}-crawler",
-            name=f"BusObservatoryStack_{bucket.bucket_name}_crawler",
+            "BusObservatory_Crawler",
+            name="BusObservatory_Crawler",
             database_name=bucket.bucket_name,
             role=glue_role.role_arn,
             schedule={"scheduleExpression":"cron(0/30 * * * ? *)"},
@@ -89,23 +89,23 @@ class BusObservatoryLake(Construct):
 
         location_resource = lakeformation.CfnResource(
             self, 
-            f"{bucket.bucket_name}_DatalakeLocationResource",
+            "BusObservatory_DatalakeLocationResource",
             resource_arn= bucket.bucket_arn,
             use_service_linked_role=True
         )
 
         lakeformation.CfnPermissions(
             self, 
-            f"{bucket.bucket_name}_DatalakeDatabasePermission",
+            "BusObservatory_DatalakeDatabasePermission",
             data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(data_lake_principal_identifier=glue_role.role_arn),
             resource=lakeformation.CfnPermissions.ResourceProperty(database_resource=lakeformation.CfnPermissions.DatabaseResourceProperty(name=db.database_name)),
             permissions=["ALTER", "DROP", "CREATE_TABLE"],
         )
 
-        # FIXME: this doesnt deploy — appears blocked by AWS Organizations (AT has a ticket out as of 2023-02-10)
+        # FIXME: this doesnt deploy
         location_permission = lakeformation.CfnPermissions(
             self, 
-            f"{bucket.bucket_name}_DatalakeLocationPermission",
+            "BusObservatory_DatalakeLocationPermission",
             data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(
                 data_lake_principal_identifier=glue_role.role_arn
                 ),
