@@ -27,7 +27,20 @@ class BusObservatoryStack(Stack):
         ###########################################################
         # S3 BUCKET
         ###########################################################
-        bucket = s3.Bucket(self, bucket_name, bucket_name=bucket_name)
+        #FIXME: update using dev branch code to create this bucket instead of using an existing one
+        # bucket = s3.Bucket.from_bucket_name(self, bucket_name, bucket_name)
+        # bucket = s3.Bucket(
+        #     self, 
+        #     "BusObservatory_S3_Bucket", 
+        #     bucket_name=bucket_name
+        #     )
+        #FIXME: objects can be public TURN OFF
+        bucket = s3.Bucket(
+            self, 
+            "BusObservatory_S3_Bucket",
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            bucket_name=bucket_name
+            )
 
         ###########################################################
         # LOAD FEED CONFIG FROM DISK
@@ -43,9 +56,10 @@ class BusObservatoryStack(Stack):
             self,
             "BusObservatoryParamStore",
             region=self.region,
-            bucket=bucket,
+            bucket_name=bucket_name,
             feeds=feeds
         )
+        paramstore.node.add_dependency(bucket)
 
         ###########################################################
         # SCHEDULED GRABBERS
@@ -59,6 +73,7 @@ class BusObservatoryStack(Stack):
             bucket=bucket,
             feeds=feeds
         )
+        grabber.node.add_dependency(bucket)
 
         ##########################################################
         # DATA LAKE
@@ -73,6 +88,7 @@ class BusObservatoryStack(Stack):
              bucket_name=bucket.bucket_name,
              feeds=feeds
              )
+        lake.node.add_dependency(bucket)
 
         # ##########################################################
         # API
