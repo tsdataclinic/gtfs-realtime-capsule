@@ -108,13 +108,9 @@ class BusObservatoryLake(Construct):
         location_permission = lakeformation.CfnPermissions(
             self, 
             "BusObservatory_DatalakeLocationPermission",
-            data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(
-                data_lake_principal_identifier=glue_role.role_arn
-                ),
-            resource=lakeformation.CfnPermissions.ResourceProperty(
-                data_location_resource=lakeformation.CfnPermissions.DataLocationResourceProperty(s3_resource=bucket.bucket_arn)
-                ),
-                permissions=["DATA_LOCATION_ACCESS"],
+            data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(data_lake_principal_identifier=glue_role.role_arn),
+            resource=lakeformation.CfnPermissions.ResourceProperty(data_location_resource=lakeformation.CfnPermissions.DataLocationResourceProperty(s3_resource=bucket.bucket_arn)),
+            permissions=["DATA_LOCATION_ACCESS"],
             )
 
         #make sure the location resource is created first
