@@ -49,3 +49,6 @@ The goal is to complete in Spring 2023 and migrate the existing data lakes over 
  * `cdk docs`        open CDK documentation
 * `cdk destroy`      remove the stack and all associated resources (non-empty S3 buckets wont be deleted!)
 
+# Troubleshooting Deploy Errors
+
+Don't forget to add your local cdk role (the one created by cdk bootstrap) to LakeFormation data lake admins.

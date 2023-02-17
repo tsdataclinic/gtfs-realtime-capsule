@@ -4,7 +4,7 @@ import aws_cdk as cdk
 from bus_observatory_stack.bus_observatory_stack import BusObservatoryStack
 
 ############### CONFIG
-bucket_name = "busobservatory-anthony-test"
+bucket_name = "busobservatory-datalake-test"
 
 
 app = cdk.App()

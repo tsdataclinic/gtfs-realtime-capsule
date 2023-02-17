@@ -51,7 +51,7 @@ class BusObservatoryAPI(Construct):
         my_certificate = acm.DnsValidatedCertificate(
             self,
             "BusObservatoryAPI_Certificate",
-            domain_name="dev.busobservatory.org",
+            domain_name="beta.busobservatory.org",
             hosted_zone=my_hosted_zone,
             region="us-east-1"
             )
@@ -62,7 +62,7 @@ class BusObservatoryAPI(Construct):
             "BusObservatoryAPI_ApiGateway",
             handler=my_handler,
             domain_name=apigateway.DomainNameOptions(
-                domain_name="dev.busobservatory.org",
+                domain_name="beta.busobservatory.org",
                 certificate=my_certificate,
                 security_policy=apigateway.SecurityPolicy.TLS_1_2,
                 endpoint_type=apigateway.EndpointType.EDGE,
@@ -73,7 +73,7 @@ class BusObservatoryAPI(Construct):
         route53.ARecord(
             self,
             "BusObservatoryAPI_ApiRecord",
-            record_name="dev",
+            record_name="beta",
             zone=my_hosted_zone,
             target=route53.RecordTarget.from_alias(targets.ApiGateway(my_api)),
         )
