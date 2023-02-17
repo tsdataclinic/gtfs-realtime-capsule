@@ -2,6 +2,21 @@
 ###### Febuary 2023
 # BusObservatory-Stack 
 
+## TO-DOs
+
+1. Athena results bucket setup needs fixxing
+    - right now the API is using a pre-existing athena bucket to temp hold the results of queries before `pythena` cleans them up (`arn:aws:s3:::aws-athena-query-results-870747888580-us-east-1`)
+        - this is hardcoded in `my_lambdas/lambda_API/helpers.py`
+    - to fix:
+        - create a bucket in `my_constructs/API.py` using a dynamic name like `f"{bucket_name}-results"`
+        - create a new Athena workgroup, setting the default query results for that workgroup to the
+            - see https://docs.aws.amazon.com/cdk/api/v1/python/aws_cdk.aws_athena/CfnWorkGroup.html
+        - make sure the crawler and lakeformation and the rest use this workgroup
+        - grant the `my_handler` lambda `s3:*` on the resource `f"arn:aws:s3:::{bucket_name}-results"` and `f"arn:aws:s3:::{bucket_name}-results/*"`
+        - in `my_lambdas/lambda_API/helpers.py` queries will automatically use this
+
+
+## Description
 This is a prototype fully-managed stack to replace the existing collection of SAM lambdas and independently managed reosurces (S3, EventBridge rules, Route53 records, Glue crawlers and databases etc.)
 
 There are 3 main design goals:

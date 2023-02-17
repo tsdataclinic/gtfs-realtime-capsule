@@ -1,5 +1,5 @@
 from enum import Enum
-import collections
+import os
 import pythena
 from starlette.responses import Response
 import typing
@@ -12,34 +12,18 @@ import boto3
 #######################################################################
 
 # load feed from S3
-def get_feeds(bucket_name):
-    #FIXME: grab parameter data from parameter store matching "/{bucket-name}/feeds/*"
-    param_name_prefix = f"/{bucket_name}/feeds/"
+def get_feeds():
+    
+    # grab parameter data from parameter store matching "/{bucket-name}/feeds/*"
+    param_name_prefix = f"/{os.environ['bucket']}/feeds/"
     ssm = boto3.client('ssm')
-    response = ssm.describe_parameters(
-        ParameterFilters=[
-            {
-                'Key': 'Name',
-                'Option': 'BeginsWith',
-                'Values': [param_name_prefix]
-                }
-            ]
-    )
-    #         ParameterFilters=[
-    #         {
-    #             'Key': 'Name',
-    #             'Option': 'BeginsWith',
-    #             'Values': ['/myapp/']
-    #             }
-    #         ]
-    # )
+    response = ssm.get_parameters_by_path(Path=param_name_prefix)
 
-    #TODO: reconstruct a feeds dict from the parameter store data
+    #reconstruct a feeds dict from the parameter store data
     feeds = {}
     for f in response['Parameters']:
-        feeds[f['Name']] = f['Value']
-
-    # parameter_names = [param['Name'] for param in response['Parameters']]
+        system_id=f['Name'].split("/")[-1]
+        feeds[system_id] = json.loads(f['Value'])
 
     return feeds
 
@@ -74,6 +58,8 @@ def query_job(feeds,dbname, system_id, route, start, end):
         ("{feeds[system_id]['timestamp_key']}" >= from_iso8601_timestamp('{start}') AND "{feeds[system_id]['timestamp_key']}" < from_iso8601_timestamp('{end}'))
         """  
     print(query_String)
+
+    # FIXME: do i need a new workgroup for the stack? hardcoded?
     dataframe, _ = athena_client.execute(query=query_String, workgroup="busobservatory")
     # n.b. JSON serializer doesn't like NaNs
     return dataframe.fillna('').to_dict(orient='records')
@@ -93,15 +79,15 @@ def response_packager(response, system_id, route, start, end):
 def get_schema(system_id):
     client = boto3.client('athena')
     response = client.get_table_metadata(
-        CatalogName='awsdatacatalog',
-        DatabaseName='busobservatory',
+        CatalogName='awsdatacatalog', #FIXME: ok to hardcode?
+        DatabaseName=os.environ['bucket'],
         TableName=system_id
         )
     print(response)
     return response['TableMetadata']['Columns']
     
-def get_system_history(feed, system_id):
-    athena_client = pythena.Athena(database="busobservatory")
+def get_system_history(dbname, feed, system_id):
+    athena_client = pythena.Athena(database=dbname)
     query_String=   \
         f"""            
         SELECT year ("{feed['timestamp_key']}") as y, month ("{feed['timestamp_key']}") as m, day ("{feed['timestamp_key']}") as d, count(*) as ct
@@ -109,7 +95,9 @@ def get_system_history(feed, system_id):
         GROUP BY year ("{feed['timestamp_key']}"), month ("{feed['timestamp_key']}"), day ("{feed['timestamp_key']}")
         ORDER BY year ("{feed['timestamp_key']}") ASC, month ("{feed['timestamp_key']}") ASC, day ("{feed['timestamp_key']}") ASC
         """
-    dataframe, _ = athena_client.execute(query=query_String, workgroup="busobservatory")
+    dataframe, _ = athena_client.execute(
+        query=query_String, 
+        workgroup="busobservatory") # FIXME: do i need a new workgroup for the stack? hardcoded?
     # n.b. JSON serializer doesn't like NaNs
     history = dataframe.fillna('').to_dict(orient='records')
     return history

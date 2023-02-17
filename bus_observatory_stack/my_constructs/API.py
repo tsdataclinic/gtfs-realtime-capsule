@@ -35,27 +35,73 @@ class BusObservatoryAPI(Construct):
                 },
             )
         
-        # Grant the Lambda function permission to read SSM parameters
-        my_handler.add_to_role_policy(iam.PolicyStatement(
-            effect=iam.Effect.ALLOW,
-            actions=["ssm:DescribeParameters"],
-            resources=["*"]
-        ))
+        # Grant the Lambda function permissions
 
-        # Grant the Lambda function permission to run an Athena query
-        my_handler.add_to_role_policy(iam.PolicyStatement(
+        ssm_permission=iam.PolicyStatement(
             effect=iam.Effect.ALLOW,
-            actions=["ssm:DescribeParameters"],
+            actions=["ssm:GetParametersByPath"],
             resources=["*"]
-        ))
+        )
+        my_handler.add_to_role_policy(ssm_permission)
 
-        # GRANT THE LAMBDA FUNCTION PERMISSION TO RUN ATHENA QUERIES
-
-        my_handler.add_to_role_policy(iam.PolicyStatement(
+        #FIXME: specify the exact resources that the lambda needs to access
+        athena_permission=iam.PolicyStatement(
             effect=iam.Effect.ALLOW,
-            actions=["athena:StartQueryExecution"],
+            actions=[
+                "athena:StartQueryExecution",
+                "athena:GetQueryExecution",
+                "athena:GetTableMetadata",
+            ],
             resources=["*"]
-        ))
+        )
+        my_handler.add_to_role_policy(athena_permission)
+
+
+        #FIXME: specify the exact resources that the lambda needs to access
+        glue_permission=iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            actions=[
+                "glue:GetDatabases",
+                "glue:GetTable",
+                "glue:GetTables"],
+            resources=["*"]
+        )
+        my_handler.add_to_role_policy(glue_permission)
+
+        #FIXME: specify the exact resources that the lambda needs to access
+        lf_permission=iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            actions=[
+                "lakeformation:GetDataAccess"],
+            resources=["*"]
+        )
+        my_handler.add_to_role_policy(lf_permission)
+
+
+        #FIXME: this is hardcoded, ideally this bucket should be separate from the main data lake and only contain the results of the queries, and have a lifecycle rule to delete after 1 day
+        s3_permission=iam.PolicyStatement(
+            effect=iam.Effect.ALLOW,
+            actions=[
+                "s3:*"],
+            resources=[
+                "arn:aws:s3:::aws-athena-query-results-870747888580-us-east-1", 
+                "arn:aws:s3:::aws-athena-query-results-870747888580-us-east-1/*"
+            ]
+        )
+        
+        # s3_permission=iam.PolicyStatement(
+        #     effect=iam.Effect.ALLOW,
+        #     actions=[
+        #         "s3:*"],
+        #     resources=[
+        #         f"{bucket.bucket_arn}-results",
+        #         f"{bucket.bucket_arn}-results/*"
+        #     ]
+        # )
+
+        my_handler.add_to_role_policy(s3_permission)
+
+       
 
         ################################################################################
         # REST API, Custom Domain
@@ -73,18 +119,6 @@ class BusObservatoryAPI(Construct):
             "BusObservatoryAPI_HostedZone",
             domain_name=root_domain 
             )
-
-        #FIXME: dnsvaidatedcertificate is deprecated
-        # [WARNING] aws-cdk-lib.aws_certificatemanager.DnsValidatedCertificate is deprecated.
-        #   use {@link Certificate} instead
-        # # create certificate
-        # my_certificate = acm.DnsValidatedCertificate(
-        #     self,
-        #     "BusObservatoryAPI_Certificate",
-        #     domain_name="beta.busobservatory.org",
-        #     hosted_zone=my_hosted_zone,
-        #     region="us-east-1"
-        #     )
 
         # CREATE AN ACM CERTIFICATE
         my_certificate = acm.Certificate(

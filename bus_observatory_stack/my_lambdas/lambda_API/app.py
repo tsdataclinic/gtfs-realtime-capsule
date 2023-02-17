@@ -17,7 +17,7 @@ logger.setLevel(logging.DEBUG)
 #######################################################################
 # Load feeds from Parameter Store
 #######################################################################
-feeds = get_feeds(os.environ['bucket'])
+feeds = get_feeds()
 dbname = os.environ['bucket']
 
 # create enumeration of system_ids for validation of query parameters
@@ -47,6 +47,8 @@ app = FastAPI(
 # for home page
 # using this tutorial https://levelup.gitconnected.com/building-a-website-starter-with-fastapi-92d077092864
 templates = Jinja2Templates(directory="templates")
+
+#FIXME: this isnt working (but templates is)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
@@ -96,6 +98,7 @@ async def schema(request: Request,
                 system_id
                 ), # and the schema fetched from Athena,
             "history": get_system_history(
+                dbname,
                 feeds[system_id],
                 system_id
                 ) # and the system history from an athena query# and the routelist from an athena query,
