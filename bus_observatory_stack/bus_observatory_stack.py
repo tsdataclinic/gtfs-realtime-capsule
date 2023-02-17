@@ -27,14 +27,6 @@ class BusObservatoryStack(Stack):
         ###########################################################
         # S3 BUCKET
         ###########################################################
-        #FIXME: update using dev branch code to create this bucket instead of using an existing one
-        # bucket = s3.Bucket.from_bucket_name(self, bucket_name, bucket_name)
-        # bucket = s3.Bucket(
-        #     self, 
-        #     "BusObservatory_S3_Bucket", 
-        #     bucket_name=bucket_name
-        #     )
-        #FIXME: objects can be public TURN OFF
         bucket = s3.Bucket(
             self, 
             "BusObservatory_S3_Bucket",

@@ -4,7 +4,7 @@ import aws_cdk as cdk
 from bus_observatory_stack.bus_observatory_stack import BusObservatoryStack
 
 ############### CONFIG
-bucket_name = "busobservatory-2"
+bucket_name = "busobservatory-anthony-test"
 
 
 app = cdk.App()
@@ -15,7 +15,7 @@ env=cdk.Environment(
 
 BusObservatoryStack(
     app, 
-    "BusObservatoryStack",
+    "BusObservatoryStack-Anthony-Test",
     env=env,
     bucket_name=bucket_name
     )

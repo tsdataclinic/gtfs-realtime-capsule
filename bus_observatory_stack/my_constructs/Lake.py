@@ -73,8 +73,8 @@ class BusObservatoryLake(Construct):
 
         glue.CfnCrawler(
             self, 
-            "BusObservatory_Crawler",
-            name="BusObservatory_Crawler",
+            "BusObservatory_Glue_Crawler",
+            name="BusObservatory_Glue_Crawler",
             database_name=bucket.bucket_name,
             role=glue_role.role_arn,
             schedule={"scheduleExpression":"cron(0/30 * * * ? *)"},
@@ -96,7 +96,7 @@ class BusObservatoryLake(Construct):
             use_service_linked_role=True
         )
 
-        lakeformation.CfnPermissions(
+        database_permission = lakeformation.CfnPermissions(
             self, 
             "BusObservatory_DatalakeDatabasePermission",
             data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(data_lake_principal_identifier=glue_role.role_arn),
@@ -115,6 +115,7 @@ class BusObservatoryLake(Construct):
 
         #make sure the location resource is created first
         location_permission.node.add_dependency(location_resource)
+        location_permission.node.add_dependency(database_permission)
 
         # FIXME: verify tables are governed / compaction is active
         # check compaction status
