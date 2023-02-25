@@ -38,11 +38,13 @@ class BusObservatoryStack(Stack):
         ###########################################################
         # LOAD FEED CONFIG FROM DISK
         ###########################################################
-        feeds = json.load(open("feeds.json"))
+        #FIXME: this is causing tests to fail due to different start dir for test execution
+        # how to fix https://github.com/omarkohl/pytest-datafiles/issues/6
+        feeds = json.load(open("bus_observatory_stack/config/feeds.json"))
         
         ###########################################################
         # PARAMETER STORE
-        # load the config from feeds.json and store it in parameter store
+        # load the config from bus_observatory_stack/config/feeds.json and store it in parameter store
         ###########################################################
 
         paramstore = BusObservatoryParamStore(
@@ -84,13 +86,13 @@ class BusObservatoryStack(Stack):
         # COMPACTOR
         ###########################################################
         compactor = BusObservatoryCompactor(
-            self,
-            "BusObservatoryCompactor",
-             region=self.region,
-             bucket_name=bucket.bucket_name,
-             feeds=feeds
-             )
-        crawler.node.add_dependency(crawler)
+           self,
+           "BusObservatoryCompactor",
+           region=self.region,
+           bucket=bucket,
+           feeds=feeds
+        )
+        compactor.node.add_dependency(crawler)
 
 
         # ##########################################################

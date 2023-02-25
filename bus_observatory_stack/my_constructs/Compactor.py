@@ -14,6 +14,7 @@ class BusObservatoryCompactor(Construct):
 
         super().__init__(scope, id, **kwargs)
 
+
         # CREATE THE COMPACTOR LAMBDA
         # this will build and package an env using entry folder requirements.txt without need for layers
 
