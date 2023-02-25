@@ -14,7 +14,7 @@ env=cdk.Environment(
 
 BusObservatoryStack(
     app, 
-    f"BusObservatory_{stack_config['bucket_name']}",
+    f"BusObservatory-{stack_config['bucket_name']}",
     env=env,
     bucket_name=stack_config['bucket_name']
     )
