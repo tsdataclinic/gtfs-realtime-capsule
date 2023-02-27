@@ -36,7 +36,7 @@ class BusObservatoryCrawler(Construct):
                             actions=[
                                 's3:GetObject', 
                                 's3:PutObject',
-                                'lakeformation:GetDataAccess'
+                                # 'lakeformation:GetDataAccess'
                                 ], 
                             effect=iam_.Effect.ALLOW, 
                             resources=['*']

@@ -25,8 +25,8 @@ class BusObservatoryCompactor(Construct):
             runtime=_lambda.Runtime.PYTHON_3_8,
             index="app.py",
             handler="handler",
-            timeout=Duration.seconds(900), # 15 minutes
-            memory_size=1024 
+            timeout=Duration.seconds(300), 
+            memory_size=2048
         )
 
         
