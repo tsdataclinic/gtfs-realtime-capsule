@@ -6,8 +6,10 @@
 
 ## high priority
 
-1. compactions solution (this branch)
-    - simple grab from incoming, concatenate, write to compacted, and clean up sourced files, 1 per day or hour
+1. debug comapction solution (this branch)
+    - simple grab all files with 'INCOMING' in front, write out a single compacted file in the same folder, then deleted the sourced files
+    - scheduled once per day
+    - doesnt seem to glob the right files list
 2. remove all secrets so i can publish the code
 3. Athena results bucket setup needs fixxing
     - right now the API is using a pre-existing athena bucket to temp hold the results of queries before `pythena` cleans them up (`arn:aws:s3:::aws-athena-query-results-870747888580-us-east-1`)
