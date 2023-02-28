@@ -59,7 +59,11 @@ def handler(event, context):
     current_time = dt.datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d_%H:%M:%S")
     s3_url = f"s3://{bucket_name}/feeds/{system_id}/COMPACTED_{system_id}_{formatted_time}.parquet"
-    combined_df.to_parquet(s3_url, compression='snappy')
+    combined_df.to_parquet(
+        s3_url, 
+        compression="snappy",
+        times="int96"
+        )
 
     # delete all read files in file list
     s3_client = boto3.client('s3')
