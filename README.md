@@ -24,12 +24,17 @@
 
 ## middle priority
 
-1. implement tests https://docs.aws.amazon.com/cdk/v2/guide/testing.html
+1. API render feed pages daily and serve static (rather than gen from a query)
+
 
 ## low priority
 
-3. secure API-- see https://pypi.org/project/aws-cdk-secure-api/#
-3. speed up large queries by migrating to boto3 vs pythena (https://medium.com/codex/connecting-to-aws-athena-databases-using-python-4a9194427638)
+1. secure API
+    - see https://pypi.org/project/aws-cdk-secure-api/#
+    - see https://www.freecodecamp.org/news/how-to-add-jwt-authentication-in-fastapi/
+    - or webauthn?
+2. speed up large queries by migrating to boto3 vs pythena (https://medium.com/codex/connecting-to-aws-athena-databases-using-python-4a9194427638)
+3. implement tests https://docs.aws.amazon.com/cdk/v2/guide/testing.html
 
 
 ## Description

@@ -25,8 +25,8 @@ class BusObservatoryCompactor(Construct):
             runtime=_lambda.Runtime.PYTHON_3_8,
             index="app.py",
             handler="handler",
-            timeout=Duration.seconds(300), 
-            memory_size=2048
+            timeout=Duration.seconds(600), 
+            memory_size=8192
         )
 
         
@@ -48,7 +48,7 @@ class BusObservatoryCompactor(Construct):
             events.Rule(
                 self, 
                 f"BusObservatory_Compactor_Rule_{system_id}",
-                schedule=events.Schedule.rate(Duration.hours(1)), #FIXME: change to 24 hours for production
+                schedule=events.Schedule.rate(Duration.hours(24)),
                     targets = [
                         targets.LambdaFunction(
                             handler,
