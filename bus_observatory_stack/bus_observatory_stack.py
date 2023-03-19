@@ -94,18 +94,18 @@ class BusObservatoryStack(Stack):
         )
         compactor.node.add_dependency(crawler)
 
-        # ##########################################################
-        # API
-        # lambda handler
-        # gateway
-        # custom domain
-        # ##########################################################
+        # # ##########################################################
+        # # API
+        # # lambda handler
+        # # gateway
+        # # custom domain
+        # # ##########################################################
         
-        api = BusObservatoryAPI(
-            self,
-            "BusObservatoryAPI",
-            region=self.region,
-            bucket=bucket,
-            feeds=feeds
-        )
+        # api = BusObservatoryAPI(
+        #     self,
+        #     "BusObservatoryAPI",
+        #     region=self.region,
+        #     bucket=bucket,
+        #     feeds=feeds
+        # )
     
