@@ -4,6 +4,7 @@ import boto3
 import io
 import glob
 import pandas as pd
+import boto3
 
 # https://stackoverflow.com/questions/45043554/how-to-read-a-list-of-parquet-files-from-s3-as-a-pandas-dataframe-using-pyarrow
 
@@ -43,6 +44,15 @@ def pd_read_s3_multiple_parquets(
         for key in s3_keys]
     return s3_keys, pd.concat(dfs, ignore_index=True)
 
+def by_chunk(items, chunk_size=500):
+    bucket = []
+    for item in items:
+        if len(bucket) >= chunk_size:
+            yield bucket
+            bucket = []
+        bucket.append(item)
+    yield bucket
+
 def handler(event, context):
 
     # get config from the passed event
@@ -66,13 +76,22 @@ def handler(event, context):
         )
 
     # delete all read files in file list
-    s3_client = boto3.client('s3')
-    response = s3_client.delete_objects(
-        Bucket=bucket_name,
-        Delete={
-            'Objects': [{'Key': key} for key in s3_keys]
-        }
-    )
+    #BUG: this fails for more than 999 objects "[ERROR] ClientError: An error occurred (MalformedXML) when calling the DeleteObjects operation: The XML you provided was not well-formed or did not validate against our published schema"
+
+    # old solution
+    # s3_client = boto3.client('s3')
+    # response = s3_client.delete_objects(
+    #     Bucket=bucket_name,
+    #     Delete={
+    #         'Objects': [{'Key': key} for key in s3_keys]
+    #     }
+    # )
+
+    # new solution https://github.com/boto/boto3/issues/3447
+    s3_resource = boto3.resource('s3')
+    bucket = s3_resource.Bucket(bucket_name)
+    for items in by_chunk(s3_keys, 500): #TODO can go up to 1000?
+        bucket.delete_objects(Delete={'Objects': [{'Key': key} for key in items]})
 
 
     # report summary
