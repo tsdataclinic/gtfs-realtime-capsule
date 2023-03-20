@@ -7,7 +7,8 @@
 ## high priority
 
 1. debug comapction solution (this branch)
-    - memory issues on daily schedule?
+    - add way to detect when compaction fails (more than n files with INCOMING prefix?)
+    - how to fix it? throw an alarm? move them all to a dead letter queue?
 2. remove all secrets so i can publish the code
 3. Athena results bucket setup needs fixxing
     - right now the API is using a pre-existing athena bucket to temp hold the results of queries before `pythena` cleans them up (`arn:aws:s3:::aws-athena-query-results-870747888580-us-east-1`)
