@@ -29,7 +29,7 @@ class BusObservatoryAPI(Construct):
             index="app.py",
             handler="handler",
             timeout=Duration.seconds(120),
-            memory_size=1024,
+            memory_size=1024, #FIXME this could possibly be reduced to 512 
             environment={
                 "region": region,
                 "bucket": bucket.bucket_name
