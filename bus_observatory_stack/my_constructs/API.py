@@ -28,7 +28,7 @@ class BusObservatoryAPI(Construct):
             runtime=_lambda.Runtime.PYTHON_3_8,
             index="app.py",
             handler="handler",
-            timeout=Duration.seconds(60),
+            timeout=Duration.seconds(120),
             memory_size=1024,
             environment={
                 "region": region,
@@ -44,6 +44,7 @@ class BusObservatoryAPI(Construct):
             resources=["*"]
         )
         my_handler.add_to_role_policy(ssm_permission)
+        bucket.grant_read_write(my_handler)
 
         #FIXME: specify the exact resources that the lambda needs to access
         athena_permission=iam.PolicyStatement(
