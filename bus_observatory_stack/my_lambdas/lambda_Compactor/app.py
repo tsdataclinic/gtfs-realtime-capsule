@@ -75,18 +75,6 @@ def handler(event, context):
         times="int96"
         )
 
-    # delete all read files in file list
-    #BUG: this fails for more than 999 objects "[ERROR] ClientError: An error occurred (MalformedXML) when calling the DeleteObjects operation: The XML you provided was not well-formed or did not validate against our published schema"
-
-    # old solution
-    # s3_client = boto3.client('s3')
-    # response = s3_client.delete_objects(
-    #     Bucket=bucket_name,
-    #     Delete={
-    #         'Objects': [{'Key': key} for key in s3_keys]
-    #     }
-    # )
-
     # new solution https://github.com/boto/boto3/issues/3447
     s3_resource = boto3.resource('s3')
     bucket = s3_resource.Bucket(bucket_name)
