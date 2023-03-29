@@ -3,8 +3,6 @@ from aws_cdk import (
     aws_s3 as s3,
 )
 from constructs import Construct
-import json
-import boto3
 
 from bus_observatory_stack.my_constructs.ParamStore import BusObservatoryParamStore
 from bus_observatory_stack.my_constructs.Crawler import BusObservatoryCrawler
@@ -19,7 +17,7 @@ class BusObservatoryStack(Stack):
             self,
             scope: Construct,
             construct_id: str,
-            bucket_name: str,
+            stack_config: dict,
             **kwargs) -> None:
 
         super().__init__(scope, construct_id, **kwargs)
@@ -28,31 +26,23 @@ class BusObservatoryStack(Stack):
         ###########################################################
         # S3 BUCKET
         ###########################################################
+        bucket_name=stack_config["bucket_name"]
         bucket = s3.Bucket(
             self, 
             "BusObservatory_S3_Bucket",
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             bucket_name=bucket_name
             )
-
-        ###########################################################
-        # LOAD FEED CONFIG FROM DISK
-        ###########################################################
-        #FIXME: this is causing tests to fail due to different start dir for test execution
-        # how to fix https://github.com/omarkohl/pytest-datafiles/issues/6
-        feeds = json.load(open("bus_observatory_stack/config/feeds.json"))
         
         ###########################################################
         # PARAMETER STORE
         # load the config from bus_observatory_stack/config/feeds.json and store it in parameter store
         ###########################################################
-
         paramstore = BusObservatoryParamStore(
             self,
             "BusObservatoryParamStore",
-            region=self.region,
-            bucket_name=bucket_name,
-            feeds=feeds
+            stack_config=stack_config,
+            region=self.region
         )
         paramstore.node.add_dependency(bucket)
 
@@ -64,9 +54,9 @@ class BusObservatoryStack(Stack):
         grabber = BusObservatoryGrabber(
             self,
             "BusObservatoryGrabber",
+            stack_config=stack_config,
             region=self.region,
-            bucket=bucket,
-            feeds=feeds
+            bucket=bucket
         )
         grabber.node.add_dependency(bucket)
 
@@ -76,21 +66,20 @@ class BusObservatoryStack(Stack):
         crawler = BusObservatoryCrawler(
             self,
             "BusObservatoryCrawler",
-             region=self.region,
-             bucket_name=bucket.bucket_name,
-             feeds=feeds
-             )
+            stack_config=stack_config,
+            region=self.region
+        )
         crawler.node.add_dependency(bucket)
 
         ##########################################################
         # COMPACTOR
         ###########################################################
         compactor = BusObservatoryCompactor(
-           self,
-           "BusObservatoryCompactor",
-           region=self.region,
-           bucket=bucket,
-           feeds=feeds
+            self,
+            "BusObservatoryCompactor",
+            stack_config=stack_config,
+            region=self.region,
+            bucket=bucket
         )
         compactor.node.add_dependency(crawler)
 
@@ -104,8 +93,8 @@ class BusObservatoryStack(Stack):
         api = BusObservatoryAPI(
             self,
             "BusObservatoryAPI",
+            stack_config=stack_config,
             region=self.region,
-            bucket=bucket,
-            feeds=feeds
-        )
+            bucket=bucket
+            )
     

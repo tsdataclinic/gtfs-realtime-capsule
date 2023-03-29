@@ -48,19 +48,17 @@ There are 3 main design goals:
 
 The goal is to complete in Spring 2023 and migrate the existing data lakes over the summer.
 
-## How to test local lambdas
+## How to test lambdas LOCALLY
 - more info here https://stackoverflow.com/questions/64689865/debugging-lambda-locally-using-cdk-not-sam
 - embed a static test event and just pass it
+- GENERALLY THIS IS A PITA
 
-## how to view logs for lambdas
+## how to view REMOTE logs for lambdas
 
 1. get list of log groups `awslogs groups`
 2. find the one that corresponds to the Stack ARN (output of `cdk deploy`)
 3. tail and follow the log group `aws logs tail --follow {group}`
 
-## resources
-
-- AWS Solutions Constructs https://docs.aws.amazon.com/solutions/latest/constructs/aws-eventbridge-lambda.html
 
 # How Configuration is handled
 
@@ -74,17 +72,3 @@ The goal is to complete in Spring 2023 and migrate the existing data lakes over 
 
 ### For the API
 - the config is read from the parameter store on each invocation
-
-
-# Useful commands
-
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
-* `cdk destroy`      remove the stack and all associated resources (non-empty S3 buckets wont be deleted!)
-
-# Troubleshooting Deploy Errors
-
-Don't forget to add your local cdk role (the one created by cdk bootstrap) to LakeFormation data lake admins.

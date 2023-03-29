@@ -15,8 +15,17 @@ from aws_cdk import (
 
 
 class BusObservatoryAPI(Construct):
-    def __init__(self, scope: Construct, id: str, region: str, bucket, feeds: dict, **kwargs):
+    def __init__(
+            self, 
+            scope: Construct, 
+            id: str, 
+            stack_config: dict,
+            region: str, 
+            bucket,
+            **kwargs):
         super().__init__(scope, id, **kwargs)
+
+        feeds=stack_config['feeds']
         
         # CREATE THE API LAMBDA
         # this will build and package an env using entry folder requirements.txt without need for layers
@@ -91,6 +100,7 @@ class BusObservatoryAPI(Construct):
             ]
         )
         
+        #FIXME: is this the solution?
         # s3_permission=iam.PolicyStatement(
         #     effect=iam.Effect.ALLOW,
         #     actions=[
@@ -104,22 +114,20 @@ class BusObservatoryAPI(Construct):
         my_handler.add_to_role_policy(s3_permission)
 
        
-
         ################################################################################
         # REST API, Custom Domain
         # following https://cloudbytes.dev/aws-academy/cdk-api-gateway-with-custom-domain
         ################################################################################
 
-        #FIXME: this should be stored in a parameter store or passed down from the parent stack
-        root_domain = "busobservatory.org"
-        subdomain = "beta"
+        root_domain = stack_config['domain']
+        subdomain = stack_config['subdomain']
         fully_qualified_domain_name = subdomain+"."+root_domain
 
         # get the hosted zone
         my_hosted_zone = route53.HostedZone.from_lookup(
             self,
             "BusObservatoryAPI_HostedZone",
-            domain_name=root_domain 
+            domain_name=root_domain,
             )
 
         # CREATE AN ACM CERTIFICATE

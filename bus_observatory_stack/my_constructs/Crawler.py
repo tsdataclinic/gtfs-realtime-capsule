@@ -12,9 +12,18 @@ from aws_cdk import (
 
 
 class BusObservatoryCrawler(Construct):
-    def __init__(self, scope: Construct, id: str, region: str, bucket_name, feeds: list, **kwargs):
+    def __init__(
+            self, 
+            scope: Construct, 
+            id: str, 
+            stack_config: dict,
+            region: str,
+            **kwargs):
 
         super().__init__(scope, id, **kwargs)
+
+        bucket_name=stack_config['bucket_name']
+        feeds=stack_config['feeds']
 
         # create a bucket object from existing bucket
         bucket = s3.Bucket.from_bucket_name(self, "BusObservatory_Bucket", bucket_name=bucket_name)

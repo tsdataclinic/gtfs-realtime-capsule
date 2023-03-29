@@ -12,10 +12,19 @@ from aws_cdk import (
 
 
 class BusObservatoryGrabber(Construct):
-    def __init__(self, scope: Construct, id: str, region: str, bucket, feeds: dict, **kwargs):
+    def __init__(
+            self, 
+            scope: Construct, 
+            id: str, 
+            stack_config: dict,
+            region: str, 
+            bucket, 
+            **kwargs):
 
         super().__init__(scope, id, **kwargs)
 
+        feeds=stack_config['feeds'] 
+        
         # CREATE THE GRABBER LAMBDA
         # this will build and package an env using entry folder requirements.txt without need for layers
 
