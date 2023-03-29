@@ -72,7 +72,8 @@ class DataLake:
 
         # upload to S3
         source_path=f"/tmp/{filename}"
-        remote_path=f"feeds/{self.system_id}/{filename}"
+        remote_path=f"feeds/{self.system_id}/INCOMING_{filename}"
+        # remote_path=f"feeds/{self.system_id}/incoming/{filename}"
         session = boto3.Session(region_name=self.region)
         s3 = session.resource("s3")
         result = s3.Bucket(self.bucket_name).upload_file(source_path,remote_path)

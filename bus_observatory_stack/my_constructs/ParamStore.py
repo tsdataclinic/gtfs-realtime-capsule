@@ -10,9 +10,18 @@ from aws_cdk import (
 )
 
 class BusObservatoryParamStore(Construct):
-    def __init__(self, scope: Construct, id: str, region: str, bucket_name, feeds: dict, **kwargs):
+    def __init__(
+            self, 
+            scope: Construct, 
+            id: str,
+            stack_config: dict,
+            region: str, 
+            **kwargs):
         super().__init__(scope, id, **kwargs)
 
+        bucket_name = stack_config['bucket_name']
+        feeds = stack_config['feeds']
+        
         #TODO: make sure this overwrites existing values
         #Create SSM parameter for each feed
         for system_id, feed_config in feeds.items():

@@ -111,7 +111,7 @@ async def schema(request: Request,
 
 @app.get("/buses/bulk/{system_id}/{route}/{year}/{month}/{day}/{hour}", 
          response_class=PrettyJSONResponse)
-async def fetch_bulk_position_data(
+async def fetch_bulk_by_system_route_hour(
     request: Request,
     system_id: str, 
     route: str, 
@@ -133,5 +133,53 @@ async def fetch_bulk_position_data(
     return response_packager(
         query_job(feeds, dbname, system_id, route, start, end),
             system_id, route, start, end)
+
+#######################################################################
+# get most recent buses for a system_id
+# TODO alternate method = get most recent parquet
+# TODO https://stackoverflow.com/questions/45375999/how-to-download-the-latest-file-of-an-s3-bucket-using-boto3/62864288#62864288
+#######################################################################
+@app.get("/buses/live/{system_id}", 
+         response_class=PrettyJSONResponse)
+async def fetch_recent_by_system(
+    request: Request,
+    system_id: str
+    ):
+
+    return {"result": "live_query_job endpoint is here"}
+
+
+    # # # METHOD 1 -- LOAD LATEST PARQUET
+    # return load_latest_parquet(
+    #     os.environ['bucket'], 
+    #     f"feeds/{system_id}"
+    #     )
+    
+    #METHOD 2 -- ATHENA QUERY
+    
+    # # generate current time and -75 seconds offset in ISO 8601 formatin ISO 8601 format
+    # offset_seconds = 75 #TODO move to stack config
+    # start=dt.datetime.now.isoformat()
+    # end = dt.timedelta(seconds=offset_seconds)
+
+    # return live_query_job(feeds, dbname, system_id, start, end)
+
+    #TODO next -- run query and return packaged results
+    # return fetch_live_by_system_packager(
+    #     live_query_job(feeds, dbname, system_id, start, end),
+    #     system_id,
+    #     start,
+    #     end
+    #     )
+
+
+  
+
+
+
+
+#######################################################################
+# wrapper for lambda
+#######################################################################
 
 handler = Mangum(app)

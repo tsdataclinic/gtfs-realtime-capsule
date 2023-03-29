@@ -8,14 +8,22 @@ from aws_cdk import (
     aws_glue as glue,
     aws_glue_alpha as glue_alpha_,
     aws_iam as iam_,
-    aws_lakeformation as lakeformation,
 )
 
 
-class BusObservatoryLake(Construct):
-    def __init__(self, scope: Construct, id: str, region: str, bucket_name, feeds: list, **kwargs):
+class BusObservatoryCrawler(Construct):
+    def __init__(
+            self, 
+            scope: Construct, 
+            id: str, 
+            stack_config: dict,
+            region: str,
+            **kwargs):
 
         super().__init__(scope, id, **kwargs)
+
+        bucket_name=stack_config['bucket_name']
+        feeds=stack_config['feeds']
 
         # create a bucket object from existing bucket
         bucket = s3.Bucket.from_bucket_name(self, "BusObservatory_Bucket", bucket_name=bucket_name)
@@ -37,7 +45,7 @@ class BusObservatoryLake(Construct):
                             actions=[
                                 's3:GetObject', 
                                 's3:PutObject',
-                                'lakeformation:GetDataAccess'
+                                # 'lakeformation:GetDataAccess'
                                 ], 
                             effect=iam_.Effect.ALLOW, 
                             resources=['*']
@@ -83,42 +91,3 @@ class BusObservatoryLake(Construct):
             configuration= configuration_str
         )
 
-        # When your AWS Lake Formation Data catalog settings is not set to 
-        # "Use only IAM access control for new databases" or
-        # "Use only IAM access control for new tables in new databse"
-        # you need to grant additional permission to the data catalog database. 
-        # in order for the crawler to run, we need to add some permissions to lakeformation
-
-        location_resource = lakeformation.CfnResource(
-            self, 
-            "BusObservatory_DatalakeLocationResource",
-            resource_arn= bucket.bucket_arn,
-            use_service_linked_role=True
-        )
-
-        database_permission = lakeformation.CfnPermissions(
-            self, 
-            "BusObservatory_DatalakeDatabasePermission",
-            data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(data_lake_principal_identifier=glue_role.role_arn),
-            resource=lakeformation.CfnPermissions.ResourceProperty(database_resource=lakeformation.CfnPermissions.DatabaseResourceProperty(name=db.database_name)),
-            permissions=["ALTER", "DROP", "CREATE_TABLE"],
-        )
-
-        # FIXME: this doesnt deploy
-        location_permission = lakeformation.CfnPermissions(
-            self, 
-            "BusObservatory_DatalakeLocationPermission",
-            data_lake_principal=lakeformation.CfnPermissions.DataLakePrincipalProperty(data_lake_principal_identifier=glue_role.role_arn),
-            resource=lakeformation.CfnPermissions.ResourceProperty(data_location_resource=lakeformation.CfnPermissions.DataLocationResourceProperty(s3_resource=bucket.bucket_arn)),
-            permissions=["DATA_LOCATION_ACCESS"],
-            )
-
-        #make sure the location resource is created first
-        location_permission.node.add_dependency(location_resource)
-        location_permission.node.add_dependency(database_permission)
-
-        # FIXME: verify tables are governed / compaction is active
-        # check compaction status
-        # aws list-table-storage-optimizers --database-name database-name --table-name table-name
-        # need to add to crawler settings? "TableType":"GOVERNED",
-        # FIXME: how to set the compaction schedule?

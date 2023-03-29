@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-import os
+import os, json
 import aws_cdk as cdk
 from bus_observatory_stack.bus_observatory_stack import BusObservatoryStack
 
-############### CONFIG
-bucket_name = "busobservatory-2-main"
-
+############### APP CONFIG
+stack_config = json.load(open("config/stack_config.json"))
 
 app = cdk.App()
 
@@ -15,9 +14,9 @@ env=cdk.Environment(
 
 BusObservatoryStack(
     app, 
-    "BusObservatoryStack-Anthony-Test",
+    f"BusObservatory-{stack_config['bucket_name']}",
     env=env,
-    bucket_name=bucket_name
+    stack_config=stack_config
     )
 
 app.synth()

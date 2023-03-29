@@ -13,3 +13,4 @@ cdk.out
 secrets.json
 _examples
 .DS_Store
+SCRATCH.txt
