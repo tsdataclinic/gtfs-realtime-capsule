@@ -136,8 +136,6 @@ async def fetch_bulk_by_system_route_hour(
 
 #######################################################################
 # get most recent buses for a system_id
-# TODO alternate method = get most recent parquet
-# TODO https://stackoverflow.com/questions/45375999/how-to-download-the-latest-file-of-an-s3-bucket-using-boto3/62864288#62864288
 #######################################################################
 @app.get("/buses/live/{system_id}", 
          response_class=PrettyJSONResponse)
@@ -150,6 +148,7 @@ async def fetch_recent_by_system(
 
 
     # # # METHOD 1 -- LOAD LATEST PARQUET
+    # https://stackoverflow.com/questions/45375999/how-to-download-the-latest-file-of-an-s3-bucket-using-boto3/62864288#62864288
     # return load_latest_parquet(
     #     os.environ['bucket'], 
     #     f"feeds/{system_id}"

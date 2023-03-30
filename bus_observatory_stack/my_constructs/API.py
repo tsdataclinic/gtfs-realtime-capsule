@@ -147,7 +147,7 @@ class BusObservatoryAPI(Construct):
             "BusObservatoryAPI_ApiGateway",
             handler=my_handler,
             domain_name=apigateway.DomainNameOptions(
-                domain_name="beta.busobservatory.org",
+                domain_name=fully_qualified_domain_name,
                 certificate=my_certificate,
                 security_policy=apigateway.SecurityPolicy.TLS_1_2,
                 endpoint_type=apigateway.EndpointType.EDGE,
