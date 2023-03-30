@@ -2,3 +2,4 @@ fastapi
 mangum
 pythena
 jinja2
+geopandas
