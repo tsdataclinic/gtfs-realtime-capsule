@@ -8,6 +8,7 @@ import boto3
 # import pytz
 from shapely.geometry import Point
 from geojson import Feature, FeatureCollection
+from geojson import dumps as gjdumps
 import pandas as pd
 import io
 import numpy as np
@@ -77,6 +78,15 @@ class PrettyJSONResponse(Response):
             separators=(", ", ": "),
         ).encode("utf-8")
 
+class PrettyGeoJSONResponse(Response):
+    media_type = "application/json"
+    def render(self, content: typing.Any) -> bytes:
+        return gjdumps(
+            content,
+            ensure_ascii=False,
+            indent=4,
+            separators=(", ", ": "),
+        ).encode("utf-8")
 
 #######################################################################
 # HELPERS FOR /buses/bulk

@@ -3,12 +3,12 @@
 import os
 import datetime as dt
 from fastapi import FastAPI, Request, Path
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from mangum import Mangum
 from helpers import *
-from geojson import dumps
+from geojson import dump, dumps
 
 # logging for debugging
 import logging
@@ -140,7 +140,7 @@ async def fetch_bulk_by_system_route_hour(
 # get most recent buses for a system_id
 #######################################################################
 @app.get("/buses/live/{system_id}", 
-         response_class=PrettyJSONResponse)
+         response_class=PrettyGeoJSONResponse)
 async def fetch_recent_by_system(
     request: Request,
     system_id: str
@@ -149,10 +149,14 @@ async def fetch_recent_by_system(
     # return {"result": "live_query_job endpoint is here"}
 
     feature_collection = get_live_geojson(bucket_name, system_id)
-    logging.debug(f"returning live geojson for {system_id} with {len(feature_collection['features'])} features")
+    # logging.debug(f"returning live geojson for {system_id} with {len(feature_collection['features'])} features")
 
+    # #FIXME this works but why is it returning escaped quotes?
+    # return dumps(
+    #     { "buses" : feature_collection }
+    #     )
 
-    return dumps(feature_collection)
+    return PrettyJSONResponse(feature_collection)
 
 
 
