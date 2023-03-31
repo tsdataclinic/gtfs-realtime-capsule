@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from mangum import Mangum
 from helpers import *
+from geojson import dumps
 
 # logging for debugging
 import logging
@@ -19,6 +20,7 @@ logger.setLevel(logging.DEBUG)
 #######################################################################
 feeds = get_feeds()
 dbname = os.environ['bucket']
+bucket_name = os.environ['bucket'] #TODO clean this up
 
 # create enumeration of system_ids for validation of query parameters
 active_systems = get_system_id_enum(feeds)
@@ -144,32 +146,15 @@ async def fetch_recent_by_system(
     system_id: str
     ):
 
-    return {"result": "live_query_job endpoint is here"}
+    # return {"result": "live_query_job endpoint is here"}
+
+    feature_collection = get_live_geojson(bucket_name, system_id)
+    logging.debug(f"returning live geojson for {system_id} with {len(feature_collection['features'])} features")
 
 
-    # # # METHOD 1 -- LOAD LATEST PARQUET
-    # https://stackoverflow.com/questions/45375999/how-to-download-the-latest-file-of-an-s3-bucket-using-boto3/62864288#62864288
-    # return load_latest_parquet(
-    #     os.environ['bucket'], 
-    #     f"feeds/{system_id}"
-    #     )
-    
-    #METHOD 2 -- ATHENA QUERY
-    
-    # # generate current time and -75 seconds offset in ISO 8601 formatin ISO 8601 format
-    # offset_seconds = 75 #TODO move to stack config
-    # start=dt.datetime.now.isoformat()
-    # end = dt.timedelta(seconds=offset_seconds)
+    return dumps(feature_collection)
 
-    # return live_query_job(feeds, dbname, system_id, start, end)
 
-    #TODO next -- run query and return packaged results
-    # return fetch_live_by_system_packager(
-    #     live_query_job(feeds, dbname, system_id, start, end),
-    #     system_id,
-    #     start,
-    #     end
-    #     )
 
 
   

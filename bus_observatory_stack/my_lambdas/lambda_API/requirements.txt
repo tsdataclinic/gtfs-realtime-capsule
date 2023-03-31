@@ -2,4 +2,7 @@ fastapi
 mangum
 pythena
 jinja2
-geopandas
+fastparquet
+shapely
+pandas
+geojson
