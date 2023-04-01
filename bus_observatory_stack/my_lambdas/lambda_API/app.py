@@ -6,6 +6,8 @@ from fastapi import FastAPI, Request, Path
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
+
 from mangum import Mangum
 from helpers import *
 from geojson import dumps as geojson_dumps
@@ -53,6 +55,22 @@ templates = Jinja2Templates(directory="templates")
 #FIXME: this isnt working (but templates is)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+#######################################################################
+# CORS
+#######################################################################
+origins = [
+    "http://localhost:3000",
+    "https://*.busobservatory.org",    
+    "*" #FIXME
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 #######################################################################
 # custom filters
