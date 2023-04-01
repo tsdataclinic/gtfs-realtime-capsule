@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from mangum import Mangum
 from helpers import *
-from geojson import dump, dumps
+from geojson import dumps as geojson_dumps
 
 # logging for debugging
 import logging
@@ -139,31 +139,21 @@ async def fetch_bulk_by_system_route_hour(
 #######################################################################
 # get most recent buses for a system_id
 #######################################################################
-@app.get("/buses/live/{system_id}", 
-         response_class=PrettyGeoJSONResponse)
+@app.get("/buses/live/{system_id}",
+         response_class=PrettyJSONResponse
+)
 async def fetch_recent_by_system(
     request: Request,
     system_id: str
     ):
 
-    # return {"result": "live_query_job endpoint is here"}
+    # this returns a pandas Timestamp + a dict of strings
+    latest_time, feature_collection = get_live_geojson(bucket_name, system_id)
 
-    feature_collection = get_live_geojson(bucket_name, system_id)
-    # logging.debug(f"returning live geojson for {system_id} with {len(feature_collection['features'])} features")
+    # # TODO we should return the timestamp of the data too
+    # latest_time
 
-    # #FIXME this works but why is it returning escaped quotes?
-    # return dumps(
-    #     { "buses" : feature_collection }
-    #     )
-
-    return PrettyJSONResponse(feature_collection)
-
-
-
-
-  
-
-
+    return feature_collection
 
 
 #######################################################################

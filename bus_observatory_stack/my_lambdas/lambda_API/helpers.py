@@ -8,7 +8,8 @@ import boto3
 # import pytz
 from shapely.geometry import Point
 from geojson import Feature, FeatureCollection
-from geojson import dumps as gjdumps
+from geojson import dumps as geojson_dumps
+
 import pandas as pd
 import io
 import numpy as np
@@ -79,9 +80,9 @@ class PrettyJSONResponse(Response):
         ).encode("utf-8")
 
 class PrettyGeoJSONResponse(Response):
-    media_type = "application/json"
+    media_type = "application/geo+json"
     def render(self, content: typing.Any) -> bytes:
-        return gjdumps(
+        return geojson_dumps(
             content,
             ensure_ascii=False,
             indent=4,
@@ -169,7 +170,7 @@ def get_live_geojson(bucket_name, system_id):
     #     return fmt.format(**d)
 
     # now = pd.Timestamp.now(tz=pytz.UTC)
-    # latest_time = pd.Timestamp(df.head(1)['vehicle.timestamp'].values[0]).tz_localize('UTC')
+    latest_time = pd.Timestamp(df.head(1)['vehicle.timestamp'].values[0]).tz_localize('UTC')
     # age = now - latest_time
     # age_formatted = strfdelta(age, "{days} days, {hours} hours, {minutes} minutes, {seconds} seconds")
     # print (f"The latest parquet is {age_formatted} old")
@@ -199,7 +200,19 @@ def get_live_geojson(bucket_name, system_id):
     # Create a GeoJSON feature collection from the list of features
     feature_collection = FeatureCollection(features_list)
 
-    return feature_collection
+    #TODO return latest = the timestamp of the latest data
+
+    data = json.loads(
+        geojson_dumps(
+            feature_collection,
+            ensure_ascii=False,
+            indent=4,
+            separators=(", ", ": "),
+        ).encode("utf-8")
+    )
+
+    return latest_time, data
+        
 
 
 
