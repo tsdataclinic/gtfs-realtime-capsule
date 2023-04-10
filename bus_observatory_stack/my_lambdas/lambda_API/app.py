@@ -3,14 +3,13 @@
 import os
 import datetime as dt
 from fastapi import FastAPI, Request, Path
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 
 from mangum import Mangum
 from helpers import *
-from geojson import dumps as geojson_dumps
 
 # logging for debugging
 import logging
@@ -22,7 +21,7 @@ logger.setLevel(logging.DEBUG)
 #######################################################################
 feeds = get_feeds()
 dbname = os.environ['bucket']
-bucket_name = os.environ['bucket'] #TODO clean this up
+bucket_name = os.environ['bucket']
 
 # create enumeration of system_ids for validation of query parameters
 active_systems = get_system_id_enum(feeds)
@@ -52,8 +51,8 @@ app = FastAPI(
 # using this tutorial https://levelup.gitconnected.com/building-a-website-starter-with-fastapi-92d077092864
 templates = Jinja2Templates(directory="templates")
 
-#FIXME: this isnt working (but templates is)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# #FIXME: this isnt working (but templates is)
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 #######################################################################
 # CORS
@@ -61,7 +60,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 origins = [
     "http://localhost:3000",
     "https://*.busobservatory.org",    
-    "*" #FIXME
+    "*" #FIXME this is insecure
 ]
 
 app.add_middleware(

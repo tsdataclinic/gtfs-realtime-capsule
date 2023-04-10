@@ -22,7 +22,6 @@ class BusObservatoryParamStore(Construct):
         bucket_name = stack_config['bucket_name']
         feeds = stack_config['feeds']
         
-        #TODO: make sure this overwrites existing values
         #Create SSM parameter for each feed
         for system_id, feed_config in feeds.items():
             ssm.StringParameter(
