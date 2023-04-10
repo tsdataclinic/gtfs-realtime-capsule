@@ -99,17 +99,6 @@ class BusObservatoryAPI(Construct):
                 "arn:aws:s3:::aws-athena-query-results-870747888580-us-east-1/*"
             ]
         )
-        
-        #FIXME: is this the solution?
-        # s3_permission=iam.PolicyStatement(
-        #     effect=iam.Effect.ALLOW,
-        #     actions=[
-        #         "s3:*"],
-        #     resources=[
-        #         f"{bucket.bucket_arn}-results",
-        #         f"{bucket.bucket_arn}-results/*"
-        #     ]
-        # )
 
         my_handler.add_to_role_policy(s3_permission)
 

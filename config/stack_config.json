@@ -1,6 +1,6 @@
 {
-	"bucket_name": "bus-observatory-staging",
-	"subdomain": "staging",
+	"bucket_name": "busobservatory-lake",
+	"subdomain": "alpha",
 	"domain": "busobservatory.org",
 	"feeds": {
 		"tfnsw_bus": {

@@ -45,7 +45,7 @@ def get_system_id_enum(feeds):
 def get_schema(system_id):
     client = boto3.client('athena')
     response = client.get_table_metadata(
-        CatalogName='awsdatacatalog', #FIXME: ok to hardcode?
+        CatalogName='awsdatacatalog', #FIXME: remove hardcoding
         DatabaseName=os.environ['bucket'],
         TableName=system_id
         )
