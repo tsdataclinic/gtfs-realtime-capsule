@@ -51,8 +51,8 @@ app = FastAPI(
 # using this tutorial https://levelup.gitconnected.com/building-a-website-starter-with-fastapi-92d077092864
 templates = Jinja2Templates(directory="templates")
 
-# #FIXME: this isnt working (but templates is)
-# app.mount("/static", StaticFiles(directory="static"), name="static")
+#FIXME: this isnt working (but templates is)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 #######################################################################
 # CORS
