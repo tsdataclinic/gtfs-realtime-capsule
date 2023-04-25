@@ -2,6 +2,8 @@
 ###### Febuary 2023
 # BusObservatory-Stack 
 
+logs for the grabber are at `aws logs tail --follow /aws/lambda/BusObservatory-busobserva-BusObservatoryGrabberBus-4yD6z8VmsMAM`
+
 # TO-DOs
 
 ## high priority
