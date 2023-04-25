@@ -36,6 +36,7 @@ class BusObservatoryGrabber(Construct):
             index="app.py",
             handler="handler",
             timeout=Duration.seconds(60),
+            memory_size=1024
         )
 
         #grant write access to handler on source bucket
