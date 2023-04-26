@@ -51,25 +51,8 @@ app = FastAPI(
 # using this tutorial https://levelup.gitconnected.com/building-a-website-starter-with-fastapi-92d077092864
 templates = Jinja2Templates(directory="templates")
 
-#FIXME: this isnt working (but templates is)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# #######################################################################
-# # CORS
-# #######################################################################
-# origins = [
-#     "http://localhost:3000",
-#     "https://*.busobservatory.org",    
-#     "*" #FIXME this is insecure
-# ]
-
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=origins,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
 
 #######################################################################
 # custom filters
