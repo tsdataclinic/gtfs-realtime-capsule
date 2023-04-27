@@ -64,6 +64,11 @@ class DataLake:
 
     def dump_buses(self, positions_df: DataFrame):
 
+        # cast any int values as float to avoid schema issues later
+        # Iterate over the columns and convert integer columns to float
+        for col in positions_df.select_dtypes(include='int').columns:
+            positions_df[col] = positions_df[col].astype(float)
+
         # dump to instance ephemeral storage
         timestamp = dt.datetime.now().replace(microsecond=0)
         filename=f"{self.system_id}_{timestamp}.parquet".replace(" ", "_").replace(":", "_")

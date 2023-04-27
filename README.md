@@ -145,6 +145,13 @@ Key settings to review:
 }
 ```
 
+# Data
+
+## timestamps
+- GTFS-RT feeds are stored in UTC time.
+- NY and NJ seem to be local
+
+
 # Deployment
 
 ## Synth
