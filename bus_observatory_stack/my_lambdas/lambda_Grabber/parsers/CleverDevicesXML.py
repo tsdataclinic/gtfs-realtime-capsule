@@ -58,11 +58,9 @@ class Bus(KeyValueData):
 
 
 # #FIXME: record in UTC time
-# # record as UTC local time
-
+# not sure where this code should go below, and it needs to be modifed (this was copied from NYC SIRI)
 # # 1 convert POSIX timestamp to datetime
 # positions_df['vehicle.timestamp'] = pd.to_datetime(positions_df['vehicle.timestamp'], unit="s")
-
 # # 2 tell pandas its UTC
 # positions_df['vehicle.timestamp'] = positions_df['vehicle.timestamp'].dt.tz_localize('UTC')
 
@@ -82,6 +80,7 @@ def get_xml_data(feed):
             data = urllib.request.urlopen(feed.url).read()
             if data:
                 timestamp=get_timestamp(feed.tz)
+                #TODO: maybe convert timestamp to UTC here?
                 break
         except Exception as e:
             print (e)

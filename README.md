@@ -3,6 +3,31 @@ Updated April 2023
 
 # BusObservatory-Stack 
 
+## Known Issues
+
+### critical
+This repo can't be deployed as-is until these are fixed.
+
+1. hard-coded pythena temp query results bucket
+    - using a pre-existing athena bucket to temp hold the results of queries before `pythena` cleans them up (`arn:aws:s3:::aws-athena-query-results-870747888580-us-east-1`)
+    - this is hardcoded in `my_lambdas/lambda_API/helpers.py`
+    - to fix:
+        - create a bucket in `my_constructs/API.py` using a dynamic name like `f"{bucket_name}-results"`
+        - create a new Athena workgroup, setting the default query results for that workgroup to the
+            - see https://docs.aws.amazon.com/cdk/api/v1/python/aws_cdk.aws_athena/CfnWorkGroup.html
+        - make sure the crawler uses this workgroup
+        - grant the `my_handler` lambda `s3:*` on the resource `f"arn:aws:s3:::{bucket_name}-results"` and `f"arn:aws:s3:::{bucket_name}-results/*"`
+        - in `my_lambdas/lambda_API/helpers.py` queries will automatically use this
+2. hardcoded data catalog and workgroup in `helpers.py`
+    - need to create these assets using a Glue construct?
+3. tests dont work
+
+
+### non-critical
+1. the API can't serve images. This is related to the wrapper (`mangum`) used to handle the FastApi script.
+2. the `njxml` parser is in local time. update to UTC
+3. the `siri` parser is still in local time. update to UTC
+
 ## Overview 
 
 Open transit data has been around for a decade. But most of this information is not publicly archived, preventing transit researchers and advocates from conducting long-term studies of transit performance and other related issues.
@@ -147,6 +172,11 @@ Key settings to review:
 
 # Data
 
+Each of the feed type parsers have some idiosyncracies.
+
+## GTFS-RT
+- all numeric types are cast to float before writing to ensure that column data types are consistent (e.g. occaisionally a grab will result in only integer values in a column, and the resulting parquet file will have a different data type for that column)
+
 ## timestamps
 - GTFS-RT feeds are stored in UTC time.
 - NY and NJ seem to be local
@@ -176,25 +206,6 @@ Alternately:
 - find the one that corresponds to the Stack ARN (output of `cdk deploy`)
 - tail and follow the log group `aws logs tail --follow {group}`
 
-
-
-# Known Issues
-
-## major
-- the GTFS-RT grabber is lazy and often writes parquet files with numeric fields encoded as `int` rather than `double`. This causes problems for AWS Glue. Any query that tries to fetch results contained in one of these files will cause an error.
-
-## minor
-- the API can't serve images. This is related to the wrapper (`mangum`) used to handle the FastApi script.
-- the Athena results bucket setup needs fixxing
-    - right now the API is using a pre-existing athena bucket to temp hold the results of queries before `pythena` cleans them up (`arn:aws:s3:::aws-athena-query-results-870747888580-us-east-1`)
-        - this is hardcoded in `my_lambdas/lambda_API/helpers.py`
-    - to fix:
-        - create a bucket in `my_constructs/API.py` using a dynamic name like `f"{bucket_name}-results"`
-        - create a new Athena workgroup, setting the default query results for that workgroup to the
-            - see https://docs.aws.amazon.com/cdk/api/v1/python/aws_cdk.aws_athena/CfnWorkGroup.html
-        - make sure the crawler and lakeformation and the rest use this workgroup
-        - grant the `my_handler` lambda `s3:*` on the resource `f"arn:aws:s3:::{bucket_name}-results"` and `f"arn:aws:s3:::{bucket_name}-results/*"`
-        - in `my_lambdas/lambda_API/helpers.py` queries will automatically use this
 
 # Development
 

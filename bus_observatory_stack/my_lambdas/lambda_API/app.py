@@ -136,26 +136,6 @@ async def fetch_bulk_by_system_route_hour(
         query_job(feeds, dbname, system_id, route, start, end),
             system_id, route, start, end)
 
-# # TODO implement live feed enrpoint
-# #######################################################################
-# # get most recent buses for a system_id
-# #######################################################################
-# @app.get("/buses/live/{system_id}",
-#          response_class=PrettyJSONResponse
-# )
-# async def fetch_recent_by_system(
-#     request: Request,
-#     system_id: str
-#     ):
-
-#     # this returns a pandas Timestamp + a dict of strings
-#     latest_time, feature_collection = get_live_geojson(bucket_name, system_id)
-
-#     # # TODO we should return the timestamp of the data too
-#     # latest_time
-
-#     return feature_collection
-
 
 #######################################################################
 # wrapper for lambda

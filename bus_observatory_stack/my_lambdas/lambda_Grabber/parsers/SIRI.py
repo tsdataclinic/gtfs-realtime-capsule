@@ -30,7 +30,7 @@ def get_buses(feed):
         trio.run(main, get_SIRI_urls(feed))
         positions_df = parse_buses(fetches)
         
-    #TODO: write / refactor below for a general/non-NYC SIRI feed parser
+    #FIXME: refactor/generalize this NYC SIRI parser to work for other SIRI feeds 
     else:
 
         # these aren't used for NYC but might be for general
@@ -75,7 +75,6 @@ def parse_buses(fetches):
     for route_report in fetches:
         for route_id,route_data in route_report.items():
             route = route_id.split('_')[1]
-            #FIXME: trap this more elegantly
             try:
                 route_data=route_data.json()            
                 if 'VehicleActivity' in route_data['Siri']['ServiceDelivery']['VehicleMonitoringDelivery'][0]:
@@ -92,7 +91,6 @@ def parse_buses(fetches):
     # #FIXME: record as UTC local time
     # # 1 convert POSIX timestamp to datetime
     # positions_df['vehicle.timestamp'] = pd.to_datetime(positions_df['vehicle.timestamp'], unit="s")
-    
     # # 2 tell pandas its UTC
     # positions_df['vehicle.timestamp'] = positions_df['vehicle.timestamp'].dt.tz_localize('UTC')
 

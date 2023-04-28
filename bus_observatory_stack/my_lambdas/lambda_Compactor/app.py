@@ -65,6 +65,10 @@ def handler(event, context):
     # read and concat all files into a single dataframe
     s3_keys, combined_df = pd_read_s3_multiple_parquets(prefix, bucket_name)
 
+    # #FIXME: cast all int columns to float?
+    # for col in combined_df.select_dtypes(include='int').columns:
+    #     combined_df[col] = combined_df[col].astype(float)
+
     # dump that dataframe back to compacted lake S3 as parquet
     current_time = dt.datetime.now()
     formatted_time = current_time.strftime("%Y-%m-%d_%H:%M:%S")
@@ -78,7 +82,7 @@ def handler(event, context):
     # new solution https://github.com/boto/boto3/issues/3447
     s3_resource = boto3.resource('s3')
     bucket = s3_resource.Bucket(bucket_name)
-    for items in by_chunk(s3_keys, 500): #TODO can go up to 1000?
+    for items in by_chunk(s3_keys, 500): #don't raise above 999
         bucket.delete_objects(Delete={'Objects': [{'Key': key} for key in items]})
 
 
