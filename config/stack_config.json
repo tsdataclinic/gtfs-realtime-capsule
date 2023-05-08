@@ -86,6 +86,19 @@
 			"timestamp_key": "vehicle.timestamp",
 			"tz": "America/New_York",
 			"notes": "Sampled once per minute. We parse all fields in this feed."
+		},
+		"sf_muni": {
+			"publish": "True",
+			"system_name": "San Francisco Muni",
+			"city_name": "San Francisco, CA, US",
+			"feed_type": "gtfsrt",
+			"url": "api.511.org/transit/vehiclepositions?api_key={}&agency=SF",
+			"api_key": "bb24580d-aab4-4b2a-9722-508ffd4bc5ad",
+			"header": "False",
+			"route_key": "vehicle.trip.route_id",
+			"timestamp_key": "vehicle.timestamp",
+			"tz": "America/Los_Angeles",
+			"notes": "Sampled once per minute. We parse all fields in this feed."
 		}
 	}
 }
