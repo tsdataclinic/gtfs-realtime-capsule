@@ -57,13 +57,12 @@
         <p>We collect bulk bus position data from transit systems around the world, sampled at one-minute intervals. The Bus Observatory API allows you to query and retrieve this data one "route-hour" at a time (60 minutes worth of observations for a single route).</p>
 
             <h3>1. Download A Sample Data Set</h3>
-            <p>We have prepared several data sets for data science explorations. All are extracted from the New York City Transit SIRI feed (<code>nyct_mta_bus_siri</code>):</p>
+            <p>We have prepared several data sets for data science explorations. All are extracted from the New York City Transit SIRI feed (<code>nyct_mta_bus_siri</code>). For efficiency and data type integrity they are provided as parquet files, which can be loaded into any modern data science tool.</p>
             <ul>
-              <li><b>One route-day.</b> July 5, 2022. M1 route only. (<a href="https://urbantech-public.s3.amazonaws.com/DONT_DELETE/api.busobservatory.org%E2%80%94sampledata/nyct_mta_buses_siri.M1.2022-07-05-daily.csv.tar.gz">CSV.tar.gz</a>)</li>
-              <li><b>One route-month.</b> July 1-31, 2022. M1 route only. (<a href="https://urbantech-public.s3.amazonaws.com/DONT_DELETE/api.busobservatory.org%E2%80%94sampledata/nyct_mta_buses_siri.M1.2022-07-monthly.csv.tar.gz">CSV.tar.gz</a>)</li>
-              <li><b>One system-hour.</b> July 7, 2022. All routes. (<a href="https://urbantech-public.s3.amazonaws.com/DONT_DELETE/api.busobservatory.org%E2%80%94sampledata/nyct_mta_buses_siri.all_routes.2022-07-07-08-hourly.csv.tar.gz">CSV.tar.gz</a>)</li>
-              <li><b>One system-day.</b> July 5, 2022. All routes. (<a href="https://urbantech-public.s3.amazonaws.com/DONT_DELETE/api.busobservatory.org%E2%80%94sampledata/nyct_mta_buses_siri.all_routes.2022-07-05-daily.csv.tar.gz">CSV.tar.gz</a>)</li>
-              <li><b>One system-month.</b> July 1-31, 2022. All routes. (<a href="https://urbantech-public.s3.amazonaws.com/DONT_DELETE/api.busobservatory.org%E2%80%94sampledata/nyct_mta_buses_siri.all_routes.2022-07-monthly.csv.tar.gz">CSV.tar.gz</a>)</li>
+              <li><b>One route-day.</b> July 5, 2023. M1 route only. (<a href="https://urbantech-public.s3.amazonaws.com/DO-NOT-DELETE-BUSOBSERVATORY-PUBLIC-DATASET/one-route-day.tar.gz">parquet</a>)</li>
+              <li><b>One route-month.</b> July 1-31, 2023. M1 route only. (<a href="https://urbantech-public.s3.amazonaws.com/DO-NOT-DELETE-BUSOBSERVATORY-PUBLIC-DATASET/one-route-month.tar.gz">parquet</a>)</li>
+              <li><b>One system-day.</b> July 5, 2023. All routes. (<a href="https://urbantech-public.s3.amazonaws.com/DO-NOT-DELETE-BUSOBSERVATORY-PUBLIC-DATASET/one-system-day.tar.gz">parquet</a>)</li>
+              <li><b>One system-month.</b> July 1-31, 2023. All routes. (<a href="https://urbantech-public.s3.amazonaws.com/DO-NOT-DELETE-BUSOBSERVATORY-PUBLIC-DATASET/one-system-month.tar.gz">parquet</a>)</li>
             </ul>
 
             <h3>2. Try A Query</h3>
