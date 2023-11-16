@@ -46,18 +46,6 @@
 			"tz": "America/New_York",
 			"notes": "Sampled once per minute. Note that coverage of some fields is not available for all periods. The passenger_count and next_stop* fields are not available before May 2021."
 		},
-		"njtransit_bus": {
-			"publish": "True",
-			"system_name": "NJTransit",
-			"city_name": "NJ, US",
-			"feed_type": "njxml",
-			"url": "http://mybusnow.njtransit.com/bustime/map/getBusesForRouteAll.jsp",
-			"header": "False",
-			"route_key": "rt",
-			"timestamp_key": "timestamp",
-			"tz": "America/New_York",
-			"notes": "Sampled once per minute. This feed is based on an old technology and returns an XML response. We parse most of the fields in this feed, but most of them are undocumented."
-		},
 		"mbta_all": {
 			"publish": "True",
 			"system_name": "Massachusetts Bay Transit Authority",

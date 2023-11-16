@@ -10,9 +10,7 @@ from shapely.geometry import Point
 from geojson import Feature, FeatureCollection
 from geojson import dumps as geojson_dumps
 
-import pandas as pd
-import io
-import numpy as np
+
 
 
 #######################################################################

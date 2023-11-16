@@ -4,5 +4,5 @@ pythena
 jinja2
 fastparquet
 shapely
-pandas
+# pandas
 geojson

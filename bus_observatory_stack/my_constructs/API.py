@@ -79,6 +79,7 @@ class BusObservatoryAPI(Construct):
         )
         my_handler.add_to_role_policy(glue_permission)
 
+        #TODO: this can be deleted?
         #TODO: reduce permissions by specifying only the exact resources that the lambda needs to access
         lf_permission=iam.PolicyStatement(
             effect=iam.Effect.ALLOW,
@@ -89,7 +90,7 @@ class BusObservatoryAPI(Construct):
         my_handler.add_to_role_policy(lf_permission)
 
 
-        #BUG: this is hardcoded, ideally this bucket should be separate from the main data lake and only contain the results of the queries, and have a lifecycle rule to delete after 1 day
+        #TODO: this is hardcoded, ideally this bucket should be separate from the main data lake and only contain the results of the queries, and have a lifecycle rule to delete after 1 day
         s3_permission=iam.PolicyStatement(
             effect=iam.Effect.ALLOW,
             actions=[
@@ -99,6 +100,7 @@ class BusObservatoryAPI(Construct):
                 "arn:aws:s3:::aws-athena-query-results-870747888580-us-east-1/*"
             ]
         )
+
 
         my_handler.add_to_role_policy(s3_permission)
 

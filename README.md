@@ -1,32 +1,28 @@
 
 Updated April 2023
 
-# BusObservatory-Stack 
+# BusObservatory-Stack
 
-## Known Issues
+## Non-Critical Issues
+- the API can't serve images. This is related to the wrapper (`mangum`) used to handle the FastApi script.
+- update parsers to non-local e.g. UTC time (`njxml`, `siri`)
 
-### critical
-This repo can't be deployed as-is until these are fixed.
+## Future Development
 
-1. hard-coded pythena temp query results bucket
-    - using a pre-existing athena bucket to temp hold the results of queries before `pythena` cleans them up (`arn:aws:s3:::aws-athena-query-results-870747888580-us-east-1`)
-    - this is hardcoded in `my_lambdas/lambda_API/helpers.py`
-    - to fix:
-        - create a bucket in `my_constructs/API.py` using a dynamic name like `f"{bucket_name}-results"`
-        - create a new Athena workgroup, setting the default query results for that workgroup to the
-            - see https://docs.aws.amazon.com/cdk/api/v1/python/aws_cdk.aws_athena/CfnWorkGroup.html
-        - make sure the crawler uses this workgroup
-        - grant the `my_handler` lambda `s3:*` on the resource `f"arn:aws:s3:::{bucket_name}-results"` and `f"arn:aws:s3:::{bucket_name}-results/*"`
-        - in `my_lambdas/lambda_API/helpers.py` queries will automatically use this
-2. hardcoded data catalog and workgroup in `helpers.py`
-    - need to create these assets using a Glue construct?
-3. tests dont work
+1. better database interface
+   - rewrite with `pyAthena` OR
+    - replace pythena query execution with boto3 [howto](https://medium.com/codex/connecting-to-aws-athena-databases-using-python-4a9194427638)
+
+2. better local testing setup
+    - Testing the lambdas locally is a big PITA
+    - [more info](https://stackoverflow.com/questions/64689865/debugging-lambda-locally-using-cdk-not-sam)
+
+3. secure the API
+    - see https://pypi.org/project/aws-cdk-secure-api/#
+    - see https://www.freecodecamp.org/news/how-to-add-jwt-authentication-in-fastapi/
 
 
-### non-critical
-1. the API can't serve images. This is related to the wrapper (`mangum`) used to handle the FastApi script.
-2. the `njxml` parser is in local time. update to UTC
-3. the `siri` parser is still in local time. update to UTC
+
 
 ## Overview 
 
@@ -206,21 +202,3 @@ Alternately:
 - find the one that corresponds to the Stack ARN (output of `cdk deploy`)
 - tail and follow the log group `aws logs tail --follow {group}`
 
-
-# Development
-
-Testing the lambdas locally is a big PITA
-    
-- more info here https://stackoverflow.com/questions/64689865/debugging-lambda-locally-using-cdk-not-sam
-
-
-## replace pythena query execution with boto3
-- speed up large queries by migrating to boto3 vs pythena (https://medium.com/codex/connecting-to-aws-athena-databases-using-python-4a9194427638)
-
-## secure the API
-- see https://pypi.org/project/aws-cdk-secure-api/#
-- see https://www.freecodecamp.org/news/how-to-add-jwt-authentication-in-fastapi/
-- or webauthn?
-
-## implement tests
--  https://docs.aws.amazon.com/cdk/v2/guide/testing.html
