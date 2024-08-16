@@ -1,0 +1,6 @@
+flake8
+black
+pytest
+requests
+structlog
+gtfs-realtime-bindings
