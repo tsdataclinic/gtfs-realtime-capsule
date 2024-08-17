@@ -12,3 +12,12 @@ make local-dev-shell
 # if you want to tear down local dev env:
 make local-dev-down
 ```
+
+# Run the scraper
+Run the scrape.py script.
+
+```bash
+python scrape.py
+```
+
+An example is included in `example_mta_subway.txt`.
