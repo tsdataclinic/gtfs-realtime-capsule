@@ -5,3 +5,8 @@ requests
 structlog
 gtfs-realtime-bindings
 boto3
+protobuf
+urllib3
+pyarrow
+pandas
+s3fs
