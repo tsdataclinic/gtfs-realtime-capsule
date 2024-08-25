@@ -1,24 +1,22 @@
 import logging
-import os
 import time
 from typing import Dict
 
 import boto3
 import click
-from google.transit import gtfs_realtime_pb2
 import requests
 
 import json
 import structlog
 
 structlog.configure(
-        processors=[
-            structlog.processors.add_log_level,
-            structlog.processors.TimeStamper(fmt="iso", key="ts"),
-            structlog.processors.JSONRenderer(),
-        ],
-        wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
-    )
+    processors=[
+        structlog.processors.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso", key="ts"),
+        structlog.processors.JSONRenderer(),
+    ],
+    wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
+)
 LOG = structlog.get_logger()
 
 
