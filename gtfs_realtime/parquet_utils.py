@@ -7,6 +7,11 @@ import datetime as dt
 import s3fs
 
 
+def add_time_columns(table: pa.Table, timestamp: dt.datetime, date: dt.date) -> pa.Table:
+    table = table.add_column(1, "time", pa.array([timestamp] * len(table), type=pa.timestamp('ms')))
+    return table.add_column(1, "date", pa.array([date] * len(table), type=pa.date32()))
+
+
 def write_data(table: pa.Table, uri: str, existing_data_behavior: str = 'overwrite_or_ignore') -> None:
     s3 = s3fs.S3FileSystem()
 
@@ -36,9 +41,7 @@ def read_data(uri: str, begin: dt.datetime, end: dt.datetime, columns: str | Non
         columns=columns,
         filter=(
                 (ds.field('date') >= begin.strftime("%Y-%m-%d")) &
-                (ds.field('date') <= end.strftime("%Y-%m-%d")) &
-                (ds.field('timestamp') < end) &
-                (ds.field('timestamp') >= begin)
+                (ds.field('date') <= end.strftime("%Y-%m-%d"))
         )
     )
     return table
