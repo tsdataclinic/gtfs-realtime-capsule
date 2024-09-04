@@ -4,3 +4,4 @@ pytest
 requests
 structlog
 gtfs-realtime-bindings
+boto3
