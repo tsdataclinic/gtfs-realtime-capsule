@@ -1,7 +1,7 @@
-import gtfs_realtime_pb2
+from src.normalize import gtfs_realtime_pb2
 import requests
-from protobuf_utils import protobuf_objects_to_pyarrow_table
-from parquet_utils import write_data, add_time_columns
+from src.normalize.protobuf_utils import protobuf_objects_to_pyarrow_table
+from src.normalize.parquet_utils import write_data, add_time_columns
 import datetime as dt
 from time import sleep
 

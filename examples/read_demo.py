@@ -1,6 +1,5 @@
-from gtfs_realtime.parquet_utils import read_data
+from src.normalize.parquet_utils import read_data
 import datetime as dt
-import pandas as pd
 
 begin = dt.datetime(2024, 8, 29)
 end = dt.datetime(2024, 8, 30)

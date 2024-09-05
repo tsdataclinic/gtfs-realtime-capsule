@@ -4,7 +4,7 @@ from google.protobuf.descriptor_pool import DescriptorPool
 from google.protobuf.message_factory import GetMessageClass
 import pyarrow as pa
 
-from gtfs_realtime.protobuf_utils import protobuf_to_pyarrow_schema, protobuf_objects_to_pyarrow_table
+from src.normalize.protobuf_utils import protobuf_to_pyarrow_schema, protobuf_objects_to_pyarrow_table
 
 
 # Create Protobuf message descriptors

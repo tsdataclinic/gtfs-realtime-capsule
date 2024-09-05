@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+from typing import Optional
 import pyarrow as pa
 from pyarrow import parquet as pq
 from pyarrow import dataset as ds
@@ -28,7 +27,7 @@ def write_data(table: pa.Table, uri: str, existing_data_behavior: str = 'overwri
     )
 
 
-def read_data(uri: str, begin: dt.datetime, end: dt.datetime, columns: str | None = None) -> pa.Table:
+def read_data(uri: str, begin: dt.datetime, end: dt.datetime, columns: Optional[str] = None) -> pa.Table:
     s3 = s3fs.S3FileSystem()
     dataset = ds.dataset(
         source=uri.lstrip("s3://"),
