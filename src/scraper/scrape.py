@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 from typing import Dict
 
@@ -18,6 +19,9 @@ structlog.configure(
     wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
 )
 LOG = structlog.get_logger()
+SCRIPT_DIR = os.path.dirname(__file__)
+CONFIG_DIR = f"{SCRIPT_DIR}/../../config"
+DATA_DIR = f"{SCRIPT_DIR}/../../data"
 
 
 def check_config(config: Dict):
@@ -26,7 +30,7 @@ def check_config(config: Dict):
     assert config["s3_bucket"]["secret_key"]
 
 
-def load_config(path: str = '../../config/config.json'):
+def load_config(path: str):
     with open(path, 'r') as f:
         config = json.load(f)
         check_config(config)
@@ -52,8 +56,8 @@ def scrape(url: str):
 
 
 @click.command()
-@click.option("-f", required=True, type=str, help="feed ID to be scraped")
-@click.option("-c", type=str, default="'../../config/config.json'", help="config.json path")
+@click.option("-f", "--feed_id", required=True, type=str, help="feed ID to be scraped")
+@click.option("-c", "--config_path", type=str, default=f"{CONFIG_DIR}/config.json", help="config.json path")
 def main(feed_id, config_path):
     config = load_config(config_path)
     s3 = create_s3_client(config["s3_bucket"])
@@ -69,9 +73,10 @@ def main(feed_id, config_path):
         content = scrape(url)
         now = time.time()
         file_path = f'{config["feeds"][0]["feed_name"]}/{now}.bin'
-        f = open(f"../../data/{file_path}", 'wb')
+        s3_file_path = f"raw/{file_path}"
+        f = open(f"{DATA_DIR}/{file_path}", 'wb')
         f.write(content)
-        s3.upload_file('file_path', '')
+        s3.upload_file(f"{DATA_DIR}/{file_path}", s3_file_path)
         LOG.info(f"Scraped at {now}")
         time.sleep(60)
 
