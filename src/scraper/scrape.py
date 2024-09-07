@@ -74,6 +74,7 @@ def main(feed_id, config_path):
         now = time.time()
         file_path = f'{config["feeds"][0]["feed_name"]}/{now}.bin'
         s3_file_path = f"raw/{file_path}"
+        os.makedirs(os.path.dirname(f"{DATA_DIR}/{file_path}"), exist_ok=True)
         f = open(f"{DATA_DIR}/{file_path}", 'wb')
         f.write(content)
         s3.upload_file(f"{DATA_DIR}/{file_path}", s3_file_path)
