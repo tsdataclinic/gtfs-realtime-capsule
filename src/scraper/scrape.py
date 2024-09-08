@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from datetime import datetime
 from typing import Dict
 
 import boto3
@@ -31,7 +32,7 @@ def check_config(config: Dict):
 
 
 def load_config(path: str):
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         config = json.load(f)
         check_config(config)
         return config
@@ -57,7 +58,13 @@ def scrape(url: str):
 
 @click.command()
 @click.option("-f", "--feed_id", required=True, type=str, help="feed ID to be scraped")
-@click.option("-c", "--config_path", type=str, default=f"{CONFIG_DIR}/config.json", help="config.json path")
+@click.option(
+    "-c",
+    "--config_path",
+    type=str,
+    default=f"{CONFIG_DIR}/config.json",
+    help="config.json path",
+)
 def main(feed_id, config_path):
     config = load_config(config_path)
     s3 = create_s3_client(config["s3_bucket"])
@@ -71,11 +78,11 @@ def main(feed_id, config_path):
 
     while True:
         content = scrape(url)
-        now = time.time()
-        file_path = f'{config["feeds"][0]["feed_name"]}/{now}.bin'
+        now = datetime.now()
+        file_path = f'{config["feeds"][0]["feed_name"]}/{now.year}/{now.month}/{now.day}/{now.timestamp()}.binpb'
         s3_file_path = f"raw/{file_path}"
         os.makedirs(os.path.dirname(f"{DATA_DIR}/{file_path}"), exist_ok=True)
-        f = open(f"{DATA_DIR}/{file_path}", 'wb')
+        f = open(f"{DATA_DIR}/{file_path}", "wb")
         f.write(content)
         s3.upload_file(f"{DATA_DIR}/{file_path}", s3_file_path)
         LOG.info(f"Scraped at {now}")
