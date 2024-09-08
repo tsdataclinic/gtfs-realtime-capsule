@@ -1,3 +1,4 @@
+import importlib
 import logging
 import os
 import time
@@ -6,10 +7,11 @@ from typing import Dict
 
 import boto3
 import click
-import requests
 
 import json
 import structlog
+
+from src.scraper.mobilitydatabase import get_access_token, get_feed_json
 
 structlog.configure(
     processors=[
@@ -30,6 +32,9 @@ def check_config(config: Dict):
     assert config["s3_bucket"]["public_key"]
     assert config["s3_bucket"]["secret_key"]
 
+    assert config["mobilitydatabase"]["url"]
+    assert config["mobilitydatabase"]["token"]
+
 
 def load_config(path: str):
     with open(path, "r") as f:
@@ -47,13 +52,33 @@ def create_s3_client(s3_config: Dict):
     return s3
 
 
-def scrape(url: str):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        return response.content
-    except Exception as err:
-        LOG.error(f"Failed to get response: {err}", url=url)
+def scrape_loop(s3_client, feed_id: str):
+    module = importlib.import_module(f"src.scraper.feeds.{feed_id}.{feed_id}")
+    feed_class = getattr(module, feed_id.upper().replace("-", "_"))
+    feed = feed_class()
+    LOG.info("Start scraping", s3_bucket=s3_client)
+    while True:
+        content = feed.scrape()
+        now = datetime.now()
+        file_path = f'{feed_id}/{now.year}/{now.month}/{now.day}/{now.timestamp()}.binpb'
+        s3_file_path = f"raw/{file_path}"
+        os.makedirs(os.path.dirname(f"{DATA_DIR}/{file_path}"), exist_ok=True)
+        f = open(f"{DATA_DIR}/{file_path}", "wb")
+        f.write(content)
+        s3_client.upload_file(f"{DATA_DIR}/{file_path}", s3_file_path)
+        LOG.info(f"Scraped at {now}")
+        time.sleep(60)
+
+
+def check_feed(feed_json_path: str, feed_id: str, mdb_url: str, mdb_token: str):
+    assert os.path.exists(f"{SCRIPT_DIR}/feeds/{feed_id}/{feed_id}.py"), f"Implementation of {feed_id}.py is not found."
+    if not os.path.exists(feed_json_path):
+        LOG.warn(f"{feed_json_path} not found. Will fall back to query mobilitydatabase.")
+        access_token = get_access_token(mdb_url, mdb_token)
+        feed_json = get_feed_json(mdb_url, feed_id, access_token)
+        f = open(feed_json_path, "wb")
+        f.write(feed_json)
+        LOG.info(f"Crawled feed json to {feed_json_path}")
 
 
 @click.command()
@@ -67,26 +92,10 @@ def scrape(url: str):
 )
 def main(feed_id, config_path):
     config = load_config(config_path)
+    feed_json_path = f"{SCRIPT_DIR}/feeds/{feed_id}/{feed_id}.json"
+    check_feed(feed_json_path, feed_id, config["mobilitydatabase"]["url"], config["mobilitydatabase"]["token"])
     s3 = create_s3_client(config["s3_bucket"])
-    url = ""
-    for feed in config["feeds"]:
-        if feed["id"] == feed_id:
-            url = feed["source_info"]["producer_url"]
-    if not url:
-        raise ValueError(f"{feed_id} not found in {config_path}")
-    LOG.info("Start scraping", s3_bucket=s3, url=url)
-
-    while True:
-        content = scrape(url)
-        now = datetime.now()
-        file_path = f'{config["feeds"][0]["feed_name"]}/{now.year}/{now.month}/{now.day}/{now.timestamp()}.binpb'
-        s3_file_path = f"raw/{file_path}"
-        os.makedirs(os.path.dirname(f"{DATA_DIR}/{file_path}"), exist_ok=True)
-        f = open(f"{DATA_DIR}/{file_path}", "wb")
-        f.write(content)
-        s3.upload_file(f"{DATA_DIR}/{file_path}", s3_file_path)
-        LOG.info(f"Scraped at {now}")
-        time.sleep(60)
+    scrape_loop(s3, feed_id)
 
 
 if __name__ == "__main__":
