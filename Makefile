@@ -5,7 +5,7 @@ install:
 test:
 	pytest .
 lint:
-	black8 .
+	black .
 	flake8 .
 local-dev-build:
 	docker build -t local-dev-image -f ./docker/dev/Dockerfile .

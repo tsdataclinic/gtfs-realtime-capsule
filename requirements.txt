@@ -5,6 +5,7 @@ requests
 structlog
 gtfs-realtime-bindings
 boto3
+click
 protobuf
 urllib3
 pyarrow
