@@ -17,8 +17,8 @@ structlog.configure(
 LOG = structlog.get_logger()
 
 
-def generic_no_auth_scrape(url: str):
-    # Generic scraping implementation for feed that does not need auth
+def generic_no_auth_header_scrape(url: str):
+    # Generic scraping implementation for feed that does not need auth in the request header
     try:
         response = requests.get(url)
         response.raise_for_status()

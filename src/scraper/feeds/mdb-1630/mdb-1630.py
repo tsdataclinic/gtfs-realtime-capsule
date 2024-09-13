@@ -1,4 +1,4 @@
-from src.scraper.feeds.feed import Feed, generic_no_auth_scrape
+from src.scraper.feeds.feed import Feed, generic_no_auth_header_scrape
 
 
 class MDB_1630(Feed):
@@ -8,4 +8,4 @@ class MDB_1630(Feed):
         self.api_url = feed_json["source_info"]["producer_url"]
 
     def scrape(self):
-        generic_no_auth_scrape(self.api_url)
+        generic_no_auth_header_scrape(self.api_url)
