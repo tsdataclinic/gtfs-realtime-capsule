@@ -1,23 +1,37 @@
 # gtfs-realtime-capsule
 Tool to archive GTFS-rt data
 
-# Local development environment setup via docker
-After installing docker on your system:
+# HOW-TOs
+## How to start local development docker
+See the [docker doc](docker/README.md)
+
+## How to run the scraper
+### Prerequisite
+1. Update `config/config.json` to include related credentials
+2. Make sure the implementation and metadata json of the feed you want to scrape is in `src/scraper/feeds/` 
+### Via docker
+In `docker/prod/Dockerfile`, update the last `CMD` step with correct feed you want to scrape 
+
 ```shell
-make local-dev-build
-make local-dev-run
+make local-prod-build
+make local-prod-run
 # you are now in shell in the docker container
-# if you want to shell back in after exiting:
-make local-dev-shell
-# if you want to tear down local dev env:
-make local-dev-down
+# you can check the scraped files in 
+ls /src/data/
 ```
 
-# Run the scraper
-Run the scrape.py script.
+To inspect scraper log on the computer running docker
+```shell
+docker logs -f local-prod
+```
+To store them locally:
+```shell
+docker logs -f local-prod &> prod_run.log &
+```
 
-```bash
-python scrape.py
+### Locally on your computer
+```shell
+python3 /local/src/scraper/scrape.py -f YOUR_FEED
 ```
 
 An example is included in `example_mta_subway.txt`.
