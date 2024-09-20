@@ -1,0 +1,17 @@
+{
+  "provider": "Metropolitan Transit Authority (MTA)",
+  "feed_name": "NYC MTA Bus Vehicle Positions",
+  "note": "This is a free form json manually created since this feed is not in mobilitydatabase.org",
+  "source_info": {
+    "producer_url": "https://gtfsrt.prod.obanyc.com/vehiclePositions",
+    "api_key": ""
+  },
+  "locations": [
+    {
+      "country_code": "US",
+      "country": "United States",
+      "subdivision_name": "New York",
+      "municipality": "New York"
+    }
+  ]
+}
