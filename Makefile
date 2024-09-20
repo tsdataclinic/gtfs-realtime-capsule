@@ -18,13 +18,10 @@ local-dev-down:
 	docker stop local-dev
 	docker rm local-dev
 
-local-prod-build:
-	docker build -t local-prod-image -f ./docker/prod/Dockerfile .
+local-prod-generate-compose:
+	python3 ./docker/prod/generate_compose.py $(FEEDS)
 local-prod-run:
-	docker run -d --name local-prod local-prod-image
-	docker exec -it local-prod /bin/bash
-local-prod-shell:
-	docker exec -it local-prod /bin/bash
+	docker-compose -f docker-compose.yml up -d
+	docker ps -a
 local-prod-down:
-	docker stop local-prod
-	docker rm local-prod
+	docker-compose -f docker-compose.yml down

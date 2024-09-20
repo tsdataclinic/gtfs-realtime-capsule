@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+{% for feed in feeds %}
+  {{ feed }}-scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: local-prod
+    command: ["sh", "-c", "python3 /local/src/scraper/scrape.py -f {{ feed }}"]
+  {{ feed }}-normalizer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: local-prod
+    command: ["sh", "-c", "python3 /local/src/normalize/normalize.py -f {{ feed }}"]
+{% endfor %}

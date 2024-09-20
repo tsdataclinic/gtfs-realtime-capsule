@@ -11,3 +11,4 @@ urllib3
 pyarrow
 pandas
 s3fs
+jinja2
