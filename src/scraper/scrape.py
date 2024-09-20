@@ -60,12 +60,8 @@ def scrape_loop(s3_client, feed_id: str):
     while True:
         content = feed.scrape()
         now = datetime.now()
-        file_path = f'{feed_id}/{now.year}/{now.month}/{now.day}/{now.timestamp()}.binpb'
-        s3_file_path = f"raw/{file_path}"
-        os.makedirs(os.path.dirname(f"{DATA_DIR}/{file_path}"), exist_ok=True)
-        f = open(f"{DATA_DIR}/{file_path}", "wb")
-        f.write(content)
-        s3_client.upload_file(f"{DATA_DIR}/{file_path}", s3_file_path)
+        s3_file_path = f'raw/{feed_id}/{now.year}/{now.month}/{now.day}/{now.timestamp()}.binpb'
+        s3_client.put_object(Body=content, Key=s3_file_path)
         LOG.info(f"Scraped at {now}")
         time.sleep(60)
 
