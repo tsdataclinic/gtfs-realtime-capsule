@@ -10,4 +10,4 @@ class MDB_MTA_TRIP(Feed):
         self.api_url = feed_json["source_info"]["producer_url"]
 
     def scrape(self):
-        generic_no_auth_header_scrape(f"{self.api_url}?key={self.api_key}")
+        return generic_no_auth_header_scrape(f"{self.api_url}?key={self.api_key}")
