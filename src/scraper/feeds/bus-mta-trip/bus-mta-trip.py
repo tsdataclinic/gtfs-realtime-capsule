@@ -1,7 +1,7 @@
 from src.scraper.feeds.feed import Feed, generic_no_auth_header_scrape
 
 
-class MDB_MTA_TRIP(Feed):
+class BUS_MTA_TRIP(Feed):
 
     def __init__(self):
         feed_json = self.load_feed_json()
