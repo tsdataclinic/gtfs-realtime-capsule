@@ -20,6 +20,8 @@ local-dev-down:
 
 local-prod-generate-compose:
 	python3 ./docker/prod/generate_compose.py $(FEEDS)
+local-prod-generate-compose-all:
+	python3 ./docker/prod/generate_compose.py '*'
 local-prod-run:
 	docker-compose -f docker-compose.yml up -d
 	docker ps -a
