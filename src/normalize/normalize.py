@@ -1,20 +1,53 @@
 import datetime
 import os.path
-
+import pyarrow as pa
 import click
 import boto3
 from dateutil import parser
+import datetime as dt
 from gtfs_realtime_pb2 import FeedMessage
 from src.normalize.protobuf_utils import protobuf_objects_to_pyarrow_table
 from src.normalize.parquet_utils import write_data, add_time_columns
 import time
 import json
+import structlog
+import logging
+
+structlog.configure(
+    processors=[
+        structlog.processors.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso", key="ts"),
+        structlog.processors.JSONRenderer(),
+    ],
+    wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
+)
+LOGGER = structlog.get_logger()
+SCRIPT_DIR = os.path.dirname(__file__)
+CONFIG_DIR = f"{SCRIPT_DIR}/../../config"
+DATA_DIR = f"{SCRIPT_DIR}/../../data"
+
+
+def check_config(config: dict):
+    assert config["raw_prefix"]
+    assert config["normalize_prefix"]
+
+    assert config["feed_id"]
+
+    assert config["normalize_config"]["start_date"]
+    assert config["normalize_config"]["state_file"]
+
+
+def load_config(path: str):
+    with open(path, "r") as f:
+        config = json.load(f)
+        check_config(config)
+        return config
 
 
 def get_last_processed_timestamp(s3, bucket, key):
     try:
         response = s3.get_object(Bucket=bucket, Key=key)
-        return json.loads(response['Body'].read())['last_processed']
+        return dt.datetime.fromtimestamp(float(json.loads(response['Body'].read())['last_processed']))
     except s3.exceptions.NoSuchKey:
         return None
 
@@ -63,7 +96,6 @@ def normalize_raw_feed(raw_input, cur_time, cur_date):
     return trip_updates_pa, vehicles_pa, alerts_pa
 
 
-
 def parse_files(source_prefix, destination_prefix, start_date, state_file):
     s3 = boto3.client('s3')
 
@@ -71,7 +103,10 @@ def parse_files(source_prefix, destination_prefix, start_date, state_file):
     state_bucket, state_key = state_file.replace("s3://", "").split("/", 1)
 
     last_processed = get_last_processed_timestamp(s3, state_bucket, state_key)
-    if not last_processed:
+    if last_processed:
+        LOGGER.info(f"Loaded last_processed timestamp of {last_processed}")
+    else:
+        LOGGER.info(f"No state information found at {state_file}, defaulting `last_processed={start_date}")
         last_processed = parser.parse(start_date)
 
     # List objects in the source bucket
@@ -79,62 +114,78 @@ def parse_files(source_prefix, destination_prefix, start_date, state_file):
 
     cur_date = datetime.datetime.now()
     cur_processing = last_processed
-    if isinstance(cur_processing, str):
-        cur_processing = datetime.fromtimestamp
     while cur_processing < cur_date:
         date_partition = os.path.join(source_key, str(cur_processing.year), str(cur_processing.month), str(cur_processing.day))
-        print(date_partition)
+        LOGGER.info(f"Processing date: {date_partition}")
+        max_timestamp = last_processed.timestamp()
+
+        trip_updates_pa, vehicles_pa, alerts_pa = None, None, None
+
         for page in paginator.paginate(Bucket=source_bucket, Prefix=date_partition):
             for obj in page.get('Contents', []):
                 key = obj['Key']
-                print(key)
                 if key.endswith('.binpb'):
                     # Check if this file is newer than the last processed file
-                    print(int(key.split('/')[-1].split('.')[0]))
-                    print(last_processed.timestamp())
-                    if int(key.split('/')[-1].split('.')[0]) > last_processed.timestamp():
+                    file_write_time = float(key.split('/')[-1].removesuffix('.binpb'))
+                    if file_write_time > last_processed.timestamp():
+                        LOGGER.info(f"Processing file: {key}")
                         # Download the file
                         response = s3.get_object(Bucket=source_bucket, Key=key)
                         file_content = response['Body'].read()
 
-                        trip_updates_pa, vehicles_pa, alerts_pa = normalize_raw_feed(
+                        cur_trip_updates_pa, cur_vehicles_pa, cur_alerts_pa = normalize_raw_feed(
                             file_content,
                             obj['LastModified'],
                             obj['LastModified'].date()
                         )
 
-                        if trip_updates_pa:
-                            s3_uri = f"{destination_prefix}/trip-updates"
-                            write_data(trip_updates_pa, s3_uri)
-                        if vehicles_pa:
-                            s3_uri = f"{destination_prefix}/vehicles"
-                            write_data(vehicles_pa, s3_uri)
-                        if alerts_pa:
-                            s3_uri = f"{destination_prefix}/alerts"
-                            write_data(alerts_pa, s3_uri)
+                        trip_updates_pa = pa.concat_tables([trip_updates_pa, cur_trip_updates_pa]) if trip_updates_pa else cur_trip_updates_pa
+                        vehicles_pa = pa.concat_tables([vehicles_pa, cur_vehicles_pa]) if vehicles_pa else cur_vehicles_pa
+                        alerts_pa = pa.concat_tables([alerts_pa, cur_alerts_pa]) if alerts_pa else cur_alerts_pa
 
-                        # Update the last processed timestamp
-                        update_last_processed_timestamp(s3, state_bucket, state_key, str(obj['LastModified'].timestamp()))
+                    max_timestamp = max(max_timestamp, file_write_time)
+
+            if trip_updates_pa:
+                s3_uri = f"{destination_prefix}/trip-updates"
+                LOGGER.info(f"Writing {trip_updates_pa.num_rows} entries to {s3_uri}")
+                write_data(trip_updates_pa, s3_uri)
+            if vehicles_pa:
+                s3_uri = f"{destination_prefix}/vehicles"
+                LOGGER.info(f"Writing {vehicles_pa.num_rows} entries to {s3_uri}")
+                write_data(vehicles_pa, s3_uri)
+            if alerts_pa:
+                s3_uri = f"{destination_prefix}/alerts"
+                LOGGER.info(f"Writing {alerts_pa.num_rows} entries to {s3_uri}")
+                write_data(alerts_pa, s3_uri)
+
+            # Update the last processed timestamp
+            if max_timestamp == last_processed:
+                LOGGER.warning(f"No data found in partition: {date_partition} - is this expected?")
+            LOGGER.info(f"Updating last processed timestamp to maximum file timestamp: {max_timestamp}")
+            update_last_processed_timestamp(s3, state_bucket, state_key, max_timestamp)
         cur_processing += datetime.timedelta(days=1)
 
 
-# @click.command()
-# @click.option('--source-prefix', required=True, help='Source S3 prefix (e.g., s3://bucket/prefix)')
-# @click.option('--destination-prefix', required=True, help='Destination S3 prefix for Parquet files')
-# @click.option('--start-date', required=True, help='If no state-file is found, the date to start searching for files.')
-# @click.option('--state-file', required=True, help='S3 path to store the state (e.g., s3://bucket/state.json)')
-# @click.option('--interval', default=60, help='Run interval in seconds (default: 60)')
-def main(source_prefix, destination_prefix, start_date, state_file, interval):
+@click.option(
+    "-c",
+    "--config_path",
+    type=str,
+    default=f"{CONFIG_DIR}/config.json",
+    help="config.json path",
+)
+def main(config_path):
+    config = load_config(config_path)
+    norm_config = config["normalize_config"]
+    feed_id = config["feed_id"]
     while True:
-        parse_files(source_prefix, destination_prefix, start_date, state_file)
-        time.sleep(interval)
+        parse_files(
+            source_prefix=os.path.join(config["raw_prefix"], feed_id),
+            destination_prefix=os.path.join(config["normalize_prefix"], feed_id),
+            start_date=norm_config["start_date"],
+            state_file=norm_config["state_file"]
+        )
+        time.sleep(norm_config["loop_interval"])
 
 
 if __name__ == "__main__":
-    main(
-        "s3://dataclinic-gtfs-rt/raw/NYC Subway ACE Lines",
-        "s3://dataclinic-gtfs-rt/norm/NYC Subway ACE Lines",
-        "20240901",
-        "s3://dataclinic-gtfs-rt/state/NYC Subway ACE Lines",
-        60
-    )
+    main(f"{CONFIG_DIR}/config.json")
