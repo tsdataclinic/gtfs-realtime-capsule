@@ -78,6 +78,8 @@ def check_feed(feed_json_path: str, feed_id: str, mdb_url: str, mdb_token: str):
         LOGGER.info(f"Crawled feed json to {feed_json_path}")
 
 
+@click.command()
+@click.option("-f", "--feed_id", required=True, type=str, help="feed ID to be scraped")
 @click.option(
     "-c",
     "--config_path",
@@ -85,10 +87,8 @@ def check_feed(feed_json_path: str, feed_id: str, mdb_url: str, mdb_token: str):
     default=f"{CONFIG_DIR}/global_config.json",
     help="json path to the global config",
 )
-def main(config_path):
+def main(feed_id, config_path):
     config = load_config(config_path)
-    feed_id = config.get("feed_id")
-
     feed_json_path = f"{SCRIPT_DIR}/feeds/{feed_id}/{feed_id}.json"
     check_feed(feed_json_path, feed_id, config["mobilitydatabase"]["url"], config["mobilitydatabase"]["token"])
     s3 = create_s3_client(config["s3_bucket"])
