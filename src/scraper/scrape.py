@@ -68,7 +68,7 @@ def scrape_loop(s3_client, feed_id: str):
 
 
 def check_feed(feed_json_path: str, feed_id: str, mdb_url: str, mdb_token: str):
-    assert os.path.exists(f"{SCRIPT_DIR}/feeds/{feed_id}/{feed_id}.py"), f"Implementation of {feed_id}.py is not found."
+    assert os.path.exists(f"{SCRIPT_DIR}/feeds/{feed_id}.py"), f"Implementation of {feed_id}.py is not found."
     if not os.path.exists(feed_json_path):
         LOGGER.warn(f"{feed_json_path} not found. Will fall back to query mobilitydatabase.")
         access_token = get_access_token(mdb_url, mdb_token)
@@ -89,7 +89,7 @@ def check_feed(feed_json_path: str, feed_id: str, mdb_url: str, mdb_token: str):
 )
 def main(feed_id, config_path):
     config = load_config(config_path)
-    feed_json_path = f"{SCRIPT_DIR}/feeds/{feed_id}/{feed_id}.json"
+    feed_json_path = f"{CONFIG_DIR}/feeds/{feed_id}.json"
     check_feed(feed_json_path, feed_id, config["mobilitydatabase"]["url"], config["mobilitydatabase"]["token"])
     s3 = create_s3_client(config["s3_bucket"])
     scrape_loop(s3, feed_id)
