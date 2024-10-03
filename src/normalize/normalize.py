@@ -27,13 +27,9 @@ DATA_DIR = f"{SCRIPT_DIR}/../../data"
 
 
 def check_config(config: dict):
-    assert config["raw_prefix"]
-    assert config["normalize_prefix"]
-
-    assert config["feed_id"]
-
-    assert config["normalize_config"]["start_date"]
-    assert config["normalize_config"]["state_file"]
+    assert config["s3_bucket"]["uri"]
+    assert config["s3_bucket"]["public_key"]
+    assert config["s3_bucket"]["secret_key"]
 
 
 def load_config(path: str):
@@ -95,9 +91,7 @@ def normalize_raw_feed(raw_input, cur_time, cur_date):
     return trip_updates_pa, vehicles_pa, alerts_pa
 
 
-def parse_files(source_prefix, destination_prefix, start_date, state_file):
-    s3 = boto3.client('s3')
-
+def parse_files(s3, source_prefix, destination_prefix, start_date, state_file):
     source_bucket, source_key = source_prefix.replace("s3://", "").split("/", 1)
     state_bucket, state_key = state_file.replace("s3://", "").split("/", 1)
 
@@ -167,10 +161,10 @@ def parse_files(source_prefix, destination_prefix, start_date, state_file):
 
 def validate_date(ctx, param, value):
     if value is None:  # If no input is provided, use today's date
-        return dt.date.today()
+        return str(dt.date.today())
     try:
         # Attempt to parse the date with the expected format
-        return dt.datetime.strptime(value, '%Y%m%d').date()
+        return str(dt.datetime.strptime(value, '%Y%m%d').date())
     except ValueError:
         # Raise a BadParameter error if the format is incorrect
         raise click.BadParameter('Date must be in YYYYMMDD format.')
@@ -201,8 +195,10 @@ def main(feed_id, config_path, source_prefix, destination_prefix, start_date, st
     for key, val in config.get("normalize_argv_override", {}).items():
         LOGGER.info(f"Overriding argv {key}={val}")
         exec(key + f'={val}')
+    s3 = boto3.client('s3', aws_access_key_id=config["s3_bucket"]["public_key"], aws_secret_access_key=config["s3_bucket"]["secret_key"])
     while True:
         parse_files(
+            s3=s3,
             source_prefix=os.path.join(f"{s3_bucket_path}/{source_prefix}", feed_id),
             destination_prefix=os.path.join(f"{s3_bucket_path}/{destination_prefix}", feed_id),
             start_date=start_date,
@@ -212,4 +208,4 @@ def main(feed_id, config_path, source_prefix, destination_prefix, start_date, st
 
 
 if __name__ == "__main__":
-    main(f"{CONFIG_DIR}/global_onfig.json")
+    main()

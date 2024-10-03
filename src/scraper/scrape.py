@@ -31,8 +31,6 @@ def check_config(config: dict):
     assert config["s3_bucket"]["public_key"]
     assert config["s3_bucket"]["secret_key"]
 
-    assert config["feed_id"]
-
     assert config["mobilitydatabase"]["url"]
     assert config["mobilitydatabase"]["token"]
 
@@ -54,7 +52,7 @@ def create_s3_client(s3_config: dict):
 
 
 def scrape_loop(s3_client, feed_id: str):
-    module = importlib.import_module(f"src.scraper.feeds.{feed_id}.{feed_id}")
+    module = importlib.import_module(f"src.scraper.feeds.{feed_id}")
     feed_class = getattr(module, feed_id.upper().replace("-", "_"))
     feed = feed_class()
     LOGGER.info("Start scraping", s3_bucket=s3_client)

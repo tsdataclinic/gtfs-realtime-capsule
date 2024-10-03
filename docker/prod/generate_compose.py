@@ -22,7 +22,7 @@ template = templateEnv.get_template(TEMPLATE_FILE)
 output = template.render(feeds=feeds)
 
 # Write the rendered template to a docker-compose.yml file
-with open(f"docker-compose.yaml", "w") as f:
+with open(f"docker-compose.yml", "w") as f:
     f.write(output)
 
 print("docker-compose.yml generated successfully!")
