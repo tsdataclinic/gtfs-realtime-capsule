@@ -170,8 +170,8 @@ def parse_files(source_prefix, destination_prefix, start_date, state_file):
     "-c",
     "--config_path",
     type=str,
-    default=f"{CONFIG_DIR}/config.json",
-    help="config.json path",
+    default=f"{CONFIG_DIR}/global_config.json",
+    help="json path to the global config",
 )
 def main(config_path):
     config = load_config(config_path)
@@ -188,4 +188,4 @@ def main(config_path):
 
 
 if __name__ == "__main__":
-    main(f"{CONFIG_DIR}/config.json")
+    main(f"{CONFIG_DIR}/global_onfig.json")

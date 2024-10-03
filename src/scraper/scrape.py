@@ -18,9 +18,9 @@ structlog.configure(
         structlog.processors.TimeStamper(fmt="iso", key="ts"),
         structlog.processors.JSONRenderer(),
     ],
-    wrapper_class=structlog.make_filtering_bound_LOGGERger(logging.INFO),
+    wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
 )
-LOGGER = structlog.get_LOGGERger()
+LOGGER = structlog.get_logger()
 SCRIPT_DIR = os.path.dirname(__file__)
 CONFIG_DIR = f"{SCRIPT_DIR}/../../config"
 DATA_DIR = f"{SCRIPT_DIR}/../../data"
@@ -82,8 +82,8 @@ def check_feed(feed_json_path: str, feed_id: str, mdb_url: str, mdb_token: str):
     "-c",
     "--config_path",
     type=str,
-    default=f"{CONFIG_DIR}/config.json",
-    help="config.json path",
+    default=f"{CONFIG_DIR}/global_config.json",
+    help="json path to the global config",
 )
 def main(config_path):
     config = load_config(config_path)
