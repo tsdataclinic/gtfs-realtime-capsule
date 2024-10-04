@@ -58,6 +58,10 @@ def scrape_loop(s3_client, feed_id: str):
     LOGGER.info("Start scraping", s3_bucket=s3_client)
     while True:
         content = feed.scrape()
+        if not content:
+            LOGGER.warn("Got no content from scraping. Skipping this round.")
+            time.sleep(60)
+            continue
         now = datetime.now()
         s3_file_path = f'raw/{feed_id}/{now.year}/{now.month}/{now.day}/{now.timestamp()}.binpb'
         s3_client.put_object(Body=content, Key=s3_file_path)

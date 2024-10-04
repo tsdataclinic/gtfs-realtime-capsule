@@ -25,6 +25,7 @@ def generic_no_auth_header_scrape(url: str):
         return response.content
     except Exception as err:
         LOG.error(f"Failed to get response: {err}", url=url)
+        return ""
 
 
 class Feed(ABC):
