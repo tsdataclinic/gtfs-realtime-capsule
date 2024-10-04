@@ -3,13 +3,13 @@ services:
   {{ feed }}-scraper:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./docker/prod/Dockerfile
     image: local-prod
     command: ["sh", "-c", "python3 /local/src/scraper/scrape.py -f {{ feed }}"]
   {{ feed }}-normalizer:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: ./docker/prod/Dockerfile
     image: local-prod
     command: ["sh", "-c", "python3 /local/src/normalize/normalize.py -f {{ feed }}"]
 {% endfor %}
