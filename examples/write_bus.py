@@ -1,3 +1,5 @@
+import s3fs
+
 from src.normalize import gtfs_realtime_pb2
 import requests
 from src.normalize.protobuf_utils import protobuf_objects_to_pyarrow_table
@@ -11,6 +13,8 @@ S3_BUCKET = "dataclinic-gtfs-rt"
 API_KEY = "010c4409-73cf-477a-913c-3f95e9300d5a"
 
 PATH = f"{S3_BUCKET}/gtfs_norm/test/mta-bus"
+s3_fs = s3fs.S3FileSystem(key="foo", secret="bar")
+
 
 while True:
     for endpoint in [
@@ -46,7 +50,7 @@ while True:
             trip_updates_pa = add_time_columns(trip_updates_pa, cur_time, cur_date)
             print(f"trip-updates count: {len(trip_updates_pa)}")
             s3_uri = f"{PATH}/trip-updates"
-            write_data(trip_updates_pa, s3_uri)
+            write_data(s3_fs, trip_updates_pa, s3_uri)
 
         if vehicles_pa:
             vehicles_pa = vehicles_pa.add_column(0, "id", [[x[0] for x in vehicles]])
@@ -54,7 +58,7 @@ while True:
             print(f"vehicles count: {len(vehicles_pa)}")
 
             s3_uri = f"{PATH}/vehicles"
-            write_data(vehicles_pa, s3_uri)
+            write_data(s3_fs, vehicles_pa, s3_uri)
 
         if alerts_pa:
             alerts_pa = alerts_pa.add_column(0, "id", [[x[0] for x in alerts]])
@@ -62,7 +66,7 @@ while True:
             print(f"alerts count: {len(alerts_pa)}")
 
             s3_uri = f"{PATH}/alerts"
-            write_data(alerts_pa, s3_uri)
+            write_data(s3_fs, alerts_pa, s3_uri)
 
     print(cur_time)
     sleep(60)

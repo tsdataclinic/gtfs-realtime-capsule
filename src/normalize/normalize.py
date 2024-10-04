@@ -11,6 +11,8 @@ import time
 import json
 import structlog
 import logging
+import s3fs
+
 
 structlog.configure(
     processors=[
@@ -91,7 +93,7 @@ def normalize_raw_feed(raw_input, cur_time, cur_date):
     return trip_updates_pa, vehicles_pa, alerts_pa
 
 
-def parse_files(s3, source_prefix, destination_prefix, start_date, state_file):
+def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_file):
     source_bucket, source_key = source_prefix.replace("s3://", "").split("/", 1)
     state_bucket, state_key = state_file.replace("s3://", "").split("/", 1)
 
@@ -141,15 +143,15 @@ def parse_files(s3, source_prefix, destination_prefix, start_date, state_file):
             if trip_updates_pa:
                 s3_uri = f"{destination_prefix}/trip-updates"
                 LOGGER.info(f"Writing {trip_updates_pa.num_rows} entries to {s3_uri}")
-                write_data(trip_updates_pa, s3_uri)
+                write_data(s3_fs, trip_updates_pa, s3_uri)
             if vehicles_pa:
                 s3_uri = f"{destination_prefix}/vehicles"
                 LOGGER.info(f"Writing {vehicles_pa.num_rows} entries to {s3_uri}")
-                write_data(vehicles_pa, s3_uri)
+                write_data(s3_fs, vehicles_pa, s3_uri)
             if alerts_pa:
                 s3_uri = f"{destination_prefix}/alerts"
                 LOGGER.info(f"Writing {alerts_pa.num_rows} entries to {s3_uri}")
-                write_data(alerts_pa, s3_uri)
+                write_data(s3_fs, alerts_pa, s3_uri)
 
             # Update the last processed timestamp
             if max_timestamp == last_processed:
@@ -196,9 +198,11 @@ def main(feed_id, config_path, source_prefix, destination_prefix, start_date, st
         LOGGER.info(f"Overriding argv {key}={val}")
         exec(key + f'={val}')
     s3 = boto3.client('s3', aws_access_key_id=config["s3_bucket"]["public_key"], aws_secret_access_key=config["s3_bucket"]["secret_key"])
+    s3_fs = s3fs.S3FileSystem(key=config["s3_bucket"]["public_key"], secret=config["s3_bucket"]["secret_key"])
     while True:
         parse_files(
             s3=s3,
+            s3_fs=s3_fs,
             source_prefix=os.path.join(f"{s3_bucket_path}/{source_prefix}", feed_id),
             destination_prefix=os.path.join(f"{s3_bucket_path}/{destination_prefix}", feed_id),
             start_date=start_date,
