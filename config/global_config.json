@@ -7,13 +7,5 @@
   "mobilitydatabase": {
     "url": "https://api.mobilitydatabase.org/v1",
     "token": ""
-  },
-  "feed_id": "mdb-1630",
-  "raw_prefix": "s3://dataclinic-gtfs-rt/raw",
-  "normalize_prefix": "s3://dataclinic-gtfs-rt/norm",
-  "normalize_config": {
-    "start_date": "20240920",
-    "state_file": "s3://dataclinic-gtfs-rt/state/mdb-1630",
-    "loop_interval": 60
   }
 }
