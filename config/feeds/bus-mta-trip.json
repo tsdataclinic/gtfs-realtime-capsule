@@ -14,7 +14,5 @@
       "municipality": "New York"
     }
   ],
-  "normalize_argv_override": {
-    "start_date": "20240920"
-  }
+  "normalize_argv_override": {}
 }
