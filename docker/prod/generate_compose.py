@@ -11,7 +11,7 @@ feeds = sys.argv[1:]
 
 if "*" in feeds:
     print("Wildcard detected. Generating for all available feeds.")
-    FEEDS_CONFIG_DIR = f"{TEMPLATE_DIR}/../../../config/feeds"
+    FEEDS_CONFIG_DIR = f"{TEMPLATE_DIR}/../../config/feeds"
     feeds = [f.replace(".json", "") for f in os.listdir(FEEDS_CONFIG_DIR)]
 # Load the Jinja template
 templateLoader = jinja2.FileSystemLoader(searchpath=TEMPLATE_DIR)
