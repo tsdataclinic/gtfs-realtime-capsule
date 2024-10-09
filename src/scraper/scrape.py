@@ -18,9 +18,9 @@ structlog.configure(
         structlog.processors.TimeStamper(fmt="iso", key="ts"),
         structlog.processors.JSONRenderer(),
     ],
-    wrapper_class=structlog.make_filtering_bound_LOGGERger(logging.INFO),
+    wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
 )
-LOGGER = structlog.get_LOGGERger()
+LOGGER = structlog.get_logger()
 SCRIPT_DIR = os.path.dirname(__file__)
 CONFIG_DIR = f"{SCRIPT_DIR}/../../config"
 DATA_DIR = f"{SCRIPT_DIR}/../../data"
@@ -30,8 +30,6 @@ def check_config(config: dict):
     assert config["s3_bucket"]["uri"]
     assert config["s3_bucket"]["public_key"]
     assert config["s3_bucket"]["secret_key"]
-
-    assert config["feed_id"]
 
     assert config["mobilitydatabase"]["url"]
     assert config["mobilitydatabase"]["token"]
@@ -54,12 +52,16 @@ def create_s3_client(s3_config: dict):
 
 
 def scrape_loop(s3_client, feed_id: str):
-    module = importlib.import_module(f"src.scraper.feeds.{feed_id}.{feed_id}")
+    module = importlib.import_module(f"src.scraper.feeds.{feed_id}")
     feed_class = getattr(module, feed_id.upper().replace("-", "_"))
     feed = feed_class()
     LOGGER.info("Start scraping", s3_bucket=s3_client)
     while True:
         content = feed.scrape()
+        if not content:
+            LOGGER.warn("Got no content from scraping. Skipping this round.")
+            time.sleep(60)
+            continue
         now = datetime.now()
         s3_file_path = f'raw/{feed_id}/{now.year}/{now.month}/{now.day}/{now.timestamp()}.binpb'
         s3_client.put_object(Body=content, Key=s3_file_path)
@@ -68,7 +70,7 @@ def scrape_loop(s3_client, feed_id: str):
 
 
 def check_feed(feed_json_path: str, feed_id: str, mdb_url: str, mdb_token: str):
-    assert os.path.exists(f"{SCRIPT_DIR}/feeds/{feed_id}/{feed_id}.py"), f"Implementation of {feed_id}.py is not found."
+    assert os.path.exists(f"{SCRIPT_DIR}/feeds/{feed_id}.py"), f"Implementation of {feed_id}.py is not found."
     if not os.path.exists(feed_json_path):
         LOGGER.warn(f"{feed_json_path} not found. Will fall back to query mobilitydatabase.")
         access_token = get_access_token(mdb_url, mdb_token)
@@ -78,18 +80,18 @@ def check_feed(feed_json_path: str, feed_id: str, mdb_url: str, mdb_token: str):
         LOGGER.info(f"Crawled feed json to {feed_json_path}")
 
 
+@click.command()
+@click.option("-f", "--feed_id", required=True, type=str, help="feed ID to be scraped")
 @click.option(
     "-c",
     "--config_path",
     type=str,
-    default=f"{CONFIG_DIR}/config.json",
-    help="config.json path",
+    default=f"{CONFIG_DIR}/global_config.json",
+    help="json path to the global config",
 )
-def main(config_path):
+def main(feed_id, config_path):
     config = load_config(config_path)
-    feed_id = config.get("feed_id")
-
-    feed_json_path = f"{SCRIPT_DIR}/feeds/{feed_id}/{feed_id}.json"
+    feed_json_path = f"{CONFIG_DIR}/feeds/{feed_id}.json"
     check_feed(feed_json_path, feed_id, config["mobilitydatabase"]["url"], config["mobilitydatabase"]["token"])
     s3 = create_s3_client(config["s3_bucket"])
     scrape_loop(s3, feed_id)

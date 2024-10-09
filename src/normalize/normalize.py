@@ -1,4 +1,3 @@
-import datetime
 import os.path
 import pyarrow as pa
 import click
@@ -12,6 +11,8 @@ import time
 import json
 import structlog
 import logging
+import s3fs
+
 
 structlog.configure(
     processors=[
@@ -28,13 +29,9 @@ DATA_DIR = f"{SCRIPT_DIR}/../../data"
 
 
 def check_config(config: dict):
-    assert config["raw_prefix"]
-    assert config["normalize_prefix"]
-
-    assert config["feed_id"]
-
-    assert config["normalize_config"]["start_date"]
-    assert config["normalize_config"]["state_file"]
+    assert config["s3_bucket"]["uri"]
+    assert config["s3_bucket"]["public_key"]
+    assert config["s3_bucket"]["secret_key"]
 
 
 def load_config(path: str):
@@ -96,9 +93,7 @@ def normalize_raw_feed(raw_input, cur_time, cur_date):
     return trip_updates_pa, vehicles_pa, alerts_pa
 
 
-def parse_files(source_prefix, destination_prefix, start_date, state_file):
-    s3 = boto3.client('s3')
-
+def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_file):
     source_bucket, source_key = source_prefix.replace("s3://", "").split("/", 1)
     state_bucket, state_key = state_file.replace("s3://", "").split("/", 1)
 
@@ -112,7 +107,7 @@ def parse_files(source_prefix, destination_prefix, start_date, state_file):
     # List objects in the source bucket
     paginator = s3.get_paginator('list_objects_v2')
 
-    cur_date = datetime.datetime.now()
+    cur_date = dt.datetime.now()
     cur_processing = last_processed
     while cur_processing < cur_date:
         date_partition = os.path.join(source_key, str(cur_processing.year), str(cur_processing.month), str(cur_processing.day))
@@ -148,44 +143,73 @@ def parse_files(source_prefix, destination_prefix, start_date, state_file):
             if trip_updates_pa:
                 s3_uri = f"{destination_prefix}/trip-updates"
                 LOGGER.info(f"Writing {trip_updates_pa.num_rows} entries to {s3_uri}")
-                write_data(trip_updates_pa, s3_uri)
+                write_data(s3_fs, trip_updates_pa, s3_uri)
             if vehicles_pa:
                 s3_uri = f"{destination_prefix}/vehicles"
                 LOGGER.info(f"Writing {vehicles_pa.num_rows} entries to {s3_uri}")
-                write_data(vehicles_pa, s3_uri)
+                write_data(s3_fs, vehicles_pa, s3_uri)
             if alerts_pa:
                 s3_uri = f"{destination_prefix}/alerts"
                 LOGGER.info(f"Writing {alerts_pa.num_rows} entries to {s3_uri}")
-                write_data(alerts_pa, s3_uri)
+                write_data(s3_fs, alerts_pa, s3_uri)
 
             # Update the last processed timestamp
             if max_timestamp == last_processed:
                 LOGGER.warning(f"No data found in partition: {date_partition} - is this expected?")
             LOGGER.info(f"Updating last processed timestamp to maximum file timestamp: {max_timestamp}")
             update_last_processed_timestamp(s3, state_bucket, state_key, max_timestamp)
-        cur_processing += datetime.timedelta(days=1)
+        cur_processing += dt.timedelta(days=1)
 
 
+def validate_date(ctx, param, value):
+    if value is None:  # If no input is provided, use today's date
+        return str(dt.date.today())
+    try:
+        # Attempt to parse the date with the expected format
+        return str(dt.datetime.strptime(value, '%Y%m%d').date())
+    except ValueError:
+        # Raise a BadParameter error if the format is incorrect
+        raise click.BadParameter('Date must be in YYYYMMDD format.')
+
+
+@click.command()
+@click.option("-f", "--feed_id", required=True, type=str, help="feed ID to be scraped")
 @click.option(
     "-c",
     "--config_path",
     type=str,
-    default=f"{CONFIG_DIR}/config.json",
-    help="config.json path",
+    default=f"{CONFIG_DIR}/global_config.json",
+    help="json path to the global config",
 )
-def main(config_path):
+@click.option('--source-prefix', type=str, default="raw", help='Source S3 prefix (e.g., s3://bucket/prefix)')
+@click.option('--destination-prefix', type=str, default="norm", help='Destination S3 prefix for Parquet files')
+@click.option('--start-date', callback=validate_date, default=None, help='If no state-file is found, the date to '
+                                                                         'start searching for files. Defaults to '
+                                                                         'today\'s date if not provided.')
+@click.option('--state-file', type=str, help='S3 path to store the state (e.g., s3://bucket/state.json)')
+@click.option('--interval', type=int, default=60, help='Run interval in seconds (default: 60)')
+def main(feed_id, config_path, source_prefix, destination_prefix, start_date, state_file, interval):
     config = load_config(config_path)
-    norm_config = config["normalize_config"]
-    feed_id = config["feed_id"]
+    s3_bucket_path = f"s3://{config['s3_bucket']['uri']}"
+    if not state_file:  # set default
+        state_file = f"{s3_bucket_path}/state/{feed_id}"
+
+    for key, val in config.get("normalize_argv_override", {}).items():
+        LOGGER.info(f"Overriding argv {key}={val}")
+        exec(key + f'={val}')
+    s3 = boto3.client('s3', aws_access_key_id=config["s3_bucket"]["public_key"], aws_secret_access_key=config["s3_bucket"]["secret_key"])
+    s3_fs = s3fs.S3FileSystem(key=config["s3_bucket"]["public_key"], secret=config["s3_bucket"]["secret_key"])
     while True:
         parse_files(
-            source_prefix=os.path.join(config["raw_prefix"], feed_id),
-            destination_prefix=os.path.join(config["normalize_prefix"], feed_id),
-            start_date=norm_config["start_date"],
-            state_file=norm_config["state_file"]
+            s3=s3,
+            s3_fs=s3_fs,
+            source_prefix=os.path.join(f"{s3_bucket_path}/{source_prefix}", feed_id),
+            destination_prefix=os.path.join(f"{s3_bucket_path}/{destination_prefix}", feed_id),
+            start_date=start_date,
+            state_file=state_file
         )
-        time.sleep(norm_config["loop_interval"])
+        time.sleep(interval)
 
 
 if __name__ == "__main__":
-    main(f"{CONFIG_DIR}/config.json")
+    main()

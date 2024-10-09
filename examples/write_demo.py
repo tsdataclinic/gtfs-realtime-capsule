@@ -1,3 +1,5 @@
+import s3fs
+
 from src.normalize import gtfs_realtime_pb2
 import requests
 from src.normalize.protobuf_utils import protobuf_objects_to_pyarrow_table
@@ -7,6 +9,7 @@ from time import sleep
 
 
 S3_BUCKET = "dataclinic-gtfs-rt"
+s3_fs = s3fs.S3FileSystem(key="foo", secret="bar")
 
 while True:
     feed = gtfs_realtime_pb2.FeedMessage()
@@ -35,7 +38,7 @@ while True:
         trip_updates_pa = add_time_columns(trip_updates_pa, cur_time, cur_date)
         print(f"trip-updates count: {len(trip_updates_pa)}")
         s3_uri = f"s3://{S3_BUCKET}/gtfs_norm/test/mta-subway-ace/trip-updates"
-        write_data(trip_updates_pa, s3_uri)
+        write_data(s3_fs, trip_updates_pa, s3_uri)
 
     if vehicles_pa:
         vehicles_pa = vehicles_pa.add_column(0, "id", [[x[0] for x in vehicles]])
@@ -43,7 +46,7 @@ while True:
         print(f"vehicles count: {len(vehicles_pa)}")
 
         s3_uri = f"s3://{S3_BUCKET}/gtfs_norm/test/mta-subway-ace/vehicles"
-        write_data(vehicles_pa, s3_uri)
+        write_data(s3_fs, vehicles_pa, s3_uri)
 
     feed = gtfs_realtime_pb2.FeedMessage()
     response = requests.get('https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts')
@@ -70,7 +73,7 @@ while True:
         print(f"alerts count: {len(alerts_pa)}")
 
         s3_uri = f"s3://{S3_BUCKET}/gtfs_norm/test/mta-subway-alerts"
-        write_data(alerts_pa, s3_uri)
+        write_data(s3_fs, alerts_pa, s3_uri)
 
     print(cur_time)
     sleep(60)

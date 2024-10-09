@@ -4,6 +4,7 @@ from pyarrow import parquet as pq
 from pyarrow import dataset as ds
 import datetime as dt
 import s3fs
+from s3fs import S3FileSystem
 
 
 def add_time_columns(table: pa.Table, timestamp: dt.datetime, date: dt.date) -> pa.Table:
@@ -11,9 +12,7 @@ def add_time_columns(table: pa.Table, timestamp: dt.datetime, date: dt.date) -> 
     return table.add_column(1, "date", pa.array([date] * len(table), type=pa.date32()))
 
 
-def write_data(table: pa.Table, uri: str, existing_data_behavior: str = 'overwrite_or_ignore') -> None:
-    s3 = s3fs.S3FileSystem()
-
+def write_data(s3: S3FileSystem, table: pa.Table, uri: str, existing_data_behavior: str = 'overwrite_or_ignore') -> None:
     partition = ds.partitioning(
         schema=pa.schema([("date", pa.date32())]),
         flavor="hive"
@@ -27,8 +26,7 @@ def write_data(table: pa.Table, uri: str, existing_data_behavior: str = 'overwri
     )
 
 
-def read_data(uri: str, begin: dt.datetime, end: dt.datetime, columns: Optional[str] = None) -> pa.Table:
-    s3 = s3fs.S3FileSystem()
+def read_data(s3: S3FileSystem, uri: str, begin: dt.datetime, end: dt.datetime, columns: Optional[str] = None) -> pa.Table:
     dataset = ds.dataset(
         source=uri.lstrip("s3://"),
         filesystem=s3,
@@ -46,7 +44,7 @@ def read_data(uri: str, begin: dt.datetime, end: dt.datetime, columns: Optional[
     return table
 
 
-def compact(source: str, dest: str, date: dt.date) -> None:
+def compact(s3: S3FileSystem, source: str, dest: str, date: dt.date) -> None:
     date = dt.datetime.combine(date, dt.time.min)
     table = read_data(source, date, date + dt.timedelta(days=1))
-    write_data(table, dest, existing_data_behavior='delete_matching')
+    write_data(s3, table, dest, existing_data_behavior='delete_matching')

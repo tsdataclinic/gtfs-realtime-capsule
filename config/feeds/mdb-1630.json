@@ -35,5 +35,6 @@
       "subdivision_name": "New York",
       "municipality": "New York"
     }
-  ]
+  ],
+  "normalize_argv_override": {}
 }
