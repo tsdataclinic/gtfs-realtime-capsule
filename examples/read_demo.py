@@ -1,7 +1,8 @@
+import datetime as dt
+
 import s3fs
 
 from src.normalize.parquet_utils import read_data
-import datetime as dt
 
 begin = dt.datetime(2024, 8, 29)
 end = dt.datetime(2024, 8, 30)

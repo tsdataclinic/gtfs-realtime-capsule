@@ -1,4 +1,5 @@
 import importlib
+import json
 import logging
 import os
 import time
@@ -6,8 +7,6 @@ from datetime import datetime
 
 import boto3
 import click
-
-import json
 import structlog
 
 from src.scraper.mobilitydatabase import get_access_token, get_feed_json
@@ -63,16 +62,25 @@ def scrape_loop(s3_client, feed_id: str):
             time.sleep(60)
             continue
         now = datetime.now()
-        s3_file_path = f'raw/{feed_id}/{now.year}/{now.month}/{now.day}/{now.timestamp()}.binpb'
+        s3_file_path = (
+            f"raw/{feed_id}/{now.year}/{now.month}/{now.day}/"
+            f"{now.timestamp()}.binpb"
+        )
         s3_client.put_object(Body=content, Key=s3_file_path)
         LOGGER.info(f"Scraped at {now}")
         time.sleep(60)
 
 
-def check_feed(feed_json_path: str, feed_id: str, mdb_url: str, mdb_token: str):
-    assert os.path.exists(f"{SCRIPT_DIR}/feeds/{feed_id}.py"), f"Implementation of {feed_id}.py is not found."
+def check_feed(feed_json_path: str, feed_id: str, mdb_url: str,
+               mdb_token: str):
+    assert os.path.exists(
+        f"{SCRIPT_DIR}/feeds/{feed_id}.py"
+    ), f"Implementation of {feed_id}.py is not found."
     if not os.path.exists(feed_json_path):
-        LOGGER.warn(f"{feed_json_path} not found. Will fall back to query mobilitydatabase.")
+        LOGGER.warn(
+            f"{feed_json_path} not found. "
+            f"Will fall back to query mobilitydatabase."
+        )
         access_token = get_access_token(mdb_url, mdb_token)
         feed_json = get_feed_json(mdb_url, feed_id, access_token)
         f = open(feed_json_path, "wb")
@@ -81,7 +89,8 @@ def check_feed(feed_json_path: str, feed_id: str, mdb_url: str, mdb_token: str):
 
 
 @click.command()
-@click.option("-f", "--feed_id", required=True, type=str, help="feed ID to be scraped")
+@click.option("-f", "--feed_id", required=True, type=str,
+              help="feed ID to be scraped")
 @click.option(
     "-c",
     "--config_path",
@@ -92,7 +101,12 @@ def check_feed(feed_json_path: str, feed_id: str, mdb_url: str, mdb_token: str):
 def main(feed_id, config_path):
     config = load_config(config_path)
     feed_json_path = f"{CONFIG_DIR}/feeds/{feed_id}.json"
-    check_feed(feed_json_path, feed_id, config["mobilitydatabase"]["url"], config["mobilitydatabase"]["token"])
+    check_feed(
+        feed_json_path,
+        feed_id,
+        config["mobilitydatabase"]["url"],
+        config["mobilitydatabase"]["token"],
+    )
     s3 = create_s3_client(config["s3_bucket"])
     scrape_loop(s3, feed_id)
 

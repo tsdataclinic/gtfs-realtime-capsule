@@ -1,7 +1,8 @@
-from google.protobuf.descriptor import FieldDescriptor
-import pyarrow as pa
-from typing import List, Any
 from functools import cache
+from typing import List, Any
+
+import pyarrow as pa
+from google.protobuf.descriptor import FieldDescriptor
 
 
 def protobuf_to_pyarrow_schema(message_descriptor):
@@ -13,12 +14,22 @@ def protobuf_to_pyarrow_schema(message_descriptor):
                 # Repeated struct: create list fields for each nested variable
                 nested_fields = protobuf_to_pyarrow_schema(field.message_type)
                 for nested_field in nested_fields:
-                    fields.append(pa.field(f"{field.name}.{nested_field.name}", pa.list_(nested_field.type)))
+                    fields.append(
+                        pa.field(
+                            f"{field.name}.{nested_field.name}",
+                            pa.list_(nested_field.type),
+                        )
+                    )
             else:
                 # Non-repeated struct: flatten nested variables
                 nested_fields = protobuf_to_pyarrow_schema(field.message_type)
-                fields.extend([pa.field(f"{field.name}.{nested_field.name}", nested_field.type) for nested_field in
-                               nested_fields])
+                fields.extend(
+                    [
+                        pa.field(f"{field.name}.{nested_field.name}",
+                                 nested_field.type)
+                        for nested_field in nested_fields
+                    ]
+                )
         else:
             # Non-struct field
             pa_type = protobuf_type_to_pyarrow_type(field)
@@ -75,7 +86,9 @@ def _get_attr(field: str, msg):
     atr = getattr(msg, field, None) if msg else None
     if atr is not None:
         field_descriptor = msg.DESCRIPTOR.fields_by_name[field]
-        if (not field_descriptor.message_type) and field_descriptor.type == field_descriptor.TYPE_ENUM:
+        if (
+                not field_descriptor.message_type
+        ) and field_descriptor.type == field_descriptor.TYPE_ENUM:
             atr = _get_enum_name(atr, field_descriptor)
     return atr
 
@@ -97,10 +110,17 @@ def _get_enum_name(enum_value, field_descriptor):
 def extract_field_data(msg, field) -> Any:
     is_nested = False
     cur_msg = msg
-    for part in field.name.split('.'):
+    for part in field.name.split("."):
         if is_nested:
-            potential_descriptors = [inner_msg.DESCRIPTOR for inner_msg in cur_msg if inner_msg is not None]
-            descriptor = potential_descriptors[0].fields_by_name[part] if potential_descriptors else None
+            potential_descriptors = [
+                inner_msg.DESCRIPTOR for inner_msg in cur_msg if
+                inner_msg is not None
+            ]
+            descriptor = (
+                potential_descriptors[0].fields_by_name[part]
+                if potential_descriptors
+                else None
+            )
         else:
             descriptor = cur_msg.DESCRIPTOR.fields_by_name[part]
 
@@ -118,4 +138,3 @@ def extract_field_data(msg, field) -> Any:
             cur_msg = _safe_get_attr(part, cur_msg)
 
     return cur_msg
-
