@@ -18,7 +18,8 @@ LOG = structlog.get_logger()
 
 
 def generic_no_auth_header_scrape(url: str):
-    # Generic scraping implementation for feed that does not need auth in the request header
+    # Generic scraping implementation for feed that
+    # does not need auth in the request header
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -34,8 +35,10 @@ class Feed(ABC):
         pass
 
     def load_feed_json(self):
-        feed_id = self.__class__.__name__.lower().replace('_', '-')
-        with open(f"{os.path.dirname(__file__)}/../../../config/feeds/{feed_id}.json") as f:
+        feed_id = self.__class__.__name__.lower().replace("_", "-")
+        with open(
+                f"{os.path.dirname(__file__)}/../../../"
+                f"config/feeds/{feed_id}.json"
+        ) as f:
             data = json.load(f)
         return data
-

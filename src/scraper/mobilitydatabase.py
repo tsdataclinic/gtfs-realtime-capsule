@@ -2,7 +2,8 @@ import requests
 
 
 def get_access_token(base_url: str, refresh_token: str):
-    result = requests.post(f"{base_url}/tokens", json={"refresh_token": refresh_token})
+    result = requests.post(f"{base_url}/tokens",
+                           json={"refresh_token": refresh_token})
     result.raise_for_status()
     return result.json()["access_token"]
 
