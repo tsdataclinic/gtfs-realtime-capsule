@@ -23,4 +23,4 @@ jobs:
         flake8 $(git ls-files '*.py') --exclude src/normalize/gtfs_realtime_pb2.py
     - name: Test with pytest
       run: |
-        pytest tests --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+        pytest src/tests --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html

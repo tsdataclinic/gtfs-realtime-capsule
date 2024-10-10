@@ -1,12 +1,12 @@
-import s3fs
-
-from src.normalize import gtfs_realtime_pb2
-import requests
-from src.normalize.protobuf_utils import protobuf_objects_to_pyarrow_table
-from src.normalize.parquet_utils import write_data, add_time_columns
 import datetime as dt
 from time import sleep
 
+import requests
+import s3fs
+
+from src.normalize import gtfs_realtime_pb2
+from src.normalize.parquet_utils import write_data, add_time_columns
+from src.normalize.protobuf_utils import protobuf_objects_to_pyarrow_table
 
 S3_BUCKET = "dataclinic-gtfs-rt"
 
@@ -14,7 +14,6 @@ API_KEY = "010c4409-73cf-477a-913c-3f95e9300d5a"
 
 PATH = f"{S3_BUCKET}/gtfs_norm/test/mta-bus"
 s3_fs = s3fs.S3FileSystem(key="foo", secret="bar")
-
 
 while True:
     for endpoint in [
@@ -41,19 +40,25 @@ while True:
             if entity.HasField('vehicle'):
                 vehicles.append((entity_id, entity.vehicle))
 
-        trip_updates_pa = protobuf_objects_to_pyarrow_table([x[1] for x in trip_updates]) if trip_updates else None
-        vehicles_pa = protobuf_objects_to_pyarrow_table([x[1] for x in vehicles]) if vehicles else None
-        alerts_pa = protobuf_objects_to_pyarrow_table([x[1] for x in alerts]) if alerts else None
+        trip_updates_pa = protobuf_objects_to_pyarrow_table(
+            [x[1] for x in trip_updates]) if trip_updates else None
+        vehicles_pa = protobuf_objects_to_pyarrow_table(
+            [x[1] for x in vehicles]) if vehicles else None
+        alerts_pa = protobuf_objects_to_pyarrow_table(
+            [x[1] for x in alerts]) if alerts else None
 
         if trip_updates_pa:
-            trip_updates_pa = trip_updates_pa.add_column(0, "id", [[x[0] for x in trip_updates]])
-            trip_updates_pa = add_time_columns(trip_updates_pa, cur_time, cur_date)
+            trip_updates_pa = trip_updates_pa.add_column(0, "id", [
+                [x[0] for x in trip_updates]])
+            trip_updates_pa = add_time_columns(trip_updates_pa, cur_time,
+                                               cur_date)
             print(f"trip-updates count: {len(trip_updates_pa)}")
             s3_uri = f"{PATH}/trip-updates"
             write_data(s3_fs, trip_updates_pa, s3_uri)
 
         if vehicles_pa:
-            vehicles_pa = vehicles_pa.add_column(0, "id", [[x[0] for x in vehicles]])
+            vehicles_pa = vehicles_pa.add_column(0, "id",
+                                                 [[x[0] for x in vehicles]])
             vehicles_pa = add_time_columns(vehicles_pa, cur_time, cur_date)
             print(f"vehicles count: {len(vehicles_pa)}")
 

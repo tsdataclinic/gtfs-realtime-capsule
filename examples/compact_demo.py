@@ -1,7 +1,8 @@
+import datetime as dt
+
 import s3fs
 
 from src.normalize.parquet_utils import compact
-import datetime as dt
 
 S3_BUCKET = "dataclinic-gtfs-rt"
 
