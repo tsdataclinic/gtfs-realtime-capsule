@@ -4,12 +4,10 @@ import logging
 import os.path
 import time
 
-import boto3
 import click
 import pyarrow as pa
 import s3fs
 import structlog
-from botocore.config import Config
 from dateutil import parser
 
 from gtfs_realtime_pb2 import FeedMessage
