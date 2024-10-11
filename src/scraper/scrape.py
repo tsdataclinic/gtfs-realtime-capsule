@@ -5,8 +5,6 @@ import os
 import time
 from datetime import datetime
 
-import boto3
-from botocore.config import Config
 import click
 import structlog
 
@@ -104,7 +102,8 @@ def main(feed_id, config_path):
         config["mobilitydatabase"]["url"],
         config["mobilitydatabase"]["token"],
     )
-    s3 = create_s3_client(config["s3_bucket"]).resource("s3").Bucket(config["s3_bucket"]["uri"])
+    s3_client = create_s3_client(config["s3_bucket"])
+    s3 = s3_client.resource("s3").Bucket(config["s3_bucket"]["uri"])
     scrape_loop(s3, feed_id)
 
 
