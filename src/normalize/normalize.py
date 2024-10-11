@@ -9,11 +9,13 @@ import click
 import pyarrow as pa
 import s3fs
 import structlog
+from botocore.config import Config
 from dateutil import parser
 
 from gtfs_realtime_pb2 import FeedMessage
 from src.normalize.parquet_utils import write_data, add_time_columns
 from src.normalize.protobuf_utils import protobuf_objects_to_pyarrow_table
+from src.util.s3_client import create_s3_client
 
 structlog.configure(
     processors=[
@@ -33,6 +35,10 @@ def check_config(config: dict):
     assert config["s3_bucket"]["uri"]
     assert config["s3_bucket"]["public_key"]
     assert config["s3_bucket"]["secret_key"]
+    retries_config = config["s3_bucket"].get("retries")
+    if retries_config:
+        assert retries_config["mode"], ("mode must be specified for enabling "
+                                        "retry")
 
 
 def load_config(path: str):
@@ -282,11 +288,8 @@ def main(
     for key, val in config.get("normalize_argv_override", {}).items():
         LOGGER.info(f"Overriding argv {key}={val}")
         exec(key + f"={val}")
-    s3 = boto3.client(
-        "s3",
-        aws_access_key_id=config["s3_bucket"]["public_key"],
-        aws_secret_access_key=config["s3_bucket"]["secret_key"],
-    )
+
+    s3 = create_s3_client(config["s3_bucket"])
     s3_fs = s3fs.S3FileSystem(
         key=config["s3_bucket"]["public_key"],
         secret=config["s3_bucket"]["secret_key"]
