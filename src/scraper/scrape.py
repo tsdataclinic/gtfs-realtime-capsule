@@ -45,11 +45,11 @@ def load_config(path: str):
         return config
 
 
-def scrape_loop(s3_client, feed_id: str):
+def scrape_loop(s3_client, feed_id: str, s3_bucket: str):
     module = importlib.import_module(f"src.scraper.feeds.{feed_id}")
     feed_class = getattr(module, feed_id.upper().replace("-", "_"))
     feed = feed_class()
-    LOGGER.info("Start scraping", s3_bucket=s3_client)
+    LOGGER.info("Start scraping", s3_bucket=s3_bucket)
     while True:
         content = feed.scrape()
         if not content:
@@ -61,7 +61,7 @@ def scrape_loop(s3_client, feed_id: str):
             f"raw/{feed_id}/{now.year}/{now.month}/{now.day}/"
             f"{now.timestamp()}.binpb"
         )
-        s3_client.put_object(Body=content, Key=s3_file_path)
+        s3_client.put_object(Body=content, Key=s3_file_path, Bucket=s3_bucket)
         LOGGER.info(f"Scraped at {now}")
         time.sleep(60)
 
@@ -102,9 +102,8 @@ def main(feed_id, config_path):
         config["mobilitydatabase"]["url"],
         config["mobilitydatabase"]["token"],
     )
-    s3_client = create_s3_client(config["s3_bucket"])
-    s3 = s3_client.resource("s3").Bucket(config["s3_bucket"]["uri"])
-    scrape_loop(s3, feed_id)
+    s3 = create_s3_client(config["s3_bucket"])
+    scrape_loop(s3, feed_id, config["s3_bucket"]["uri"])
 
 
 if __name__ == "__main__":
