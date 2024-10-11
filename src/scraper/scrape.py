@@ -6,10 +6,12 @@ import time
 from datetime import datetime
 
 import boto3
+from botocore.config import Config
 import click
 import structlog
 
 from src.scraper.mobilitydatabase import get_access_token, get_feed_json
+from src.util.s3_client import create_s3_client
 
 structlog.configure(
     processors=[
@@ -29,6 +31,10 @@ def check_config(config: dict):
     assert config["s3_bucket"]["uri"]
     assert config["s3_bucket"]["public_key"]
     assert config["s3_bucket"]["secret_key"]
+    retries_config = config["s3_bucket"].get("retries")
+    if retries_config:
+        assert retries_config["mode"], ("mode must be specified for enabling "
+                                        "retry")
 
     assert config["mobilitydatabase"]["url"]
     assert config["mobilitydatabase"]["token"]
@@ -39,15 +45,6 @@ def load_config(path: str):
         config = json.load(f)
         check_config(config)
         return config
-
-
-def create_s3_client(s3_config: dict):
-    session = boto3.Session(
-        aws_access_key_id=s3_config["public_key"],
-        aws_secret_access_key=s3_config["secret_key"],
-    )
-    s3 = session.resource("s3").Bucket(s3_config["uri"])
-    return s3
 
 
 def scrape_loop(s3_client, feed_id: str):
@@ -107,7 +104,7 @@ def main(feed_id, config_path):
         config["mobilitydatabase"]["url"],
         config["mobilitydatabase"]["token"],
     )
-    s3 = create_s3_client(config["s3_bucket"])
+    s3 = create_s3_client(config["s3_bucket"]).resource("s3").Bucket(config["s3_bucket"]["uri"])
     scrape_loop(s3, feed_id)
 
 
