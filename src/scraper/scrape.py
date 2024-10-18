@@ -31,8 +31,7 @@ def check_config(config: dict):
     assert config["s3_bucket"]["secret_key"]
     retries_config = config["s3_bucket"].get("retries")
     if retries_config:
-        assert retries_config["mode"], ("mode must be specified for enabling "
-                                        "retry")
+        assert retries_config["mode"], "mode must be specified for enabling " "retry"
 
     assert config["mobilitydatabase"]["url"]
     assert config["mobilitydatabase"]["token"]
@@ -66,15 +65,13 @@ def scrape_loop(s3_client, feed_id: str, s3_bucket: str):
         time.sleep(60)
 
 
-def check_feed(feed_json_path: str, feed_id: str, mdb_url: str,
-               mdb_token: str):
+def check_feed(feed_json_path: str, feed_id: str, mdb_url: str, mdb_token: str):
     assert os.path.exists(
         f"{SCRIPT_DIR}/feeds/{feed_id}.py"
     ), f"Implementation of {feed_id}.py is not found."
     if not os.path.exists(feed_json_path):
         LOGGER.warn(
-            f"{feed_json_path} not found. "
-            f"Will fall back to query mobilitydatabase."
+            f"{feed_json_path} not found. " f"Will fall back to query mobilitydatabase."
         )
         access_token = get_access_token(mdb_url, mdb_token)
         feed_json = get_feed_json(mdb_url, feed_id, access_token)
@@ -84,8 +81,7 @@ def check_feed(feed_json_path: str, feed_id: str, mdb_url: str,
 
 
 @click.command()
-@click.option("-f", "--feed_id", required=True, type=str,
-              help="feed ID to be scraped")
+@click.option("-f", "--feed_id", required=True, type=str, help="feed ID to be scraped")
 @click.option(
     "-c",
     "--config_path",
