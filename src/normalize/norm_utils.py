@@ -9,8 +9,7 @@ def check_config(config: dict):
     assert config["s3_bucket"]["secret_key"]
     retries_config = config["s3_bucket"].get("retries")
     if retries_config:
-        assert retries_config["mode"], ("mode must be specified for enabling "
-                                        "retry")
+        assert retries_config["mode"], "mode must be specified for enabling " "retry"
 
 
 def load_config(path: str):
