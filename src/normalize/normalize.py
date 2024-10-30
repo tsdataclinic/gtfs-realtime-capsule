@@ -5,6 +5,7 @@ import time
 
 import click
 import pyarrow as pa
+import pytz
 import s3fs
 import structlog
 from dateutil import parser
@@ -99,9 +100,9 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
     # List objects in the source bucket
     paginator = s3.get_paginator("list_objects_v2")
 
-    cur_date = dt.datetime.now()
-    cur_processing = last_processed
-    while cur_processing < cur_date:
+    cur_time = dt.datetime.utcnow().astimezone(pytz.UTC)
+    cur_processing = last_processed.astimezone(pytz.UTC)
+    while cur_processing <= cur_time:
         date_partition = os.path.join(
             source_key,
             str(cur_processing.year),
@@ -109,17 +110,17 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
             str(cur_processing.day),
         )
         LOGGER.info(f"Processing date: {date_partition}")
-        max_timestamp = last_processed.timestamp()
+        max_timestamp = cur_processing.timestamp()
 
         trip_updates_pa, vehicles_pa, alerts_pa = None, None, None
 
-        for page in paginator.paginate(Bucket=source_bucket, Prefix=date_partition):
+        for page in paginator.paginate(Bucket=source_bucket, Prefix=date_partition, PaginationConfig={'PageSize': 60}):
             for obj in page.get("Contents", []):
                 key = obj["Key"]
                 if key.endswith(".binpb"):
                     # Check if this file is newer than the last processed file
                     file_write_time = float(key.split("/")[-1].removesuffix(".binpb"))
-                    if file_write_time > last_processed.timestamp():
+                    if file_write_time > cur_processing.timestamp():
                         LOGGER.info(f"Processing file: {key}")
                         # Download the file
                         response = s3.get_object(Bucket=source_bucket, Key=key)
@@ -172,10 +173,10 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
                 )
             LOGGER.info(
                 f"Updating last processed timestamp to "
-                f"maximum file timestamp: {max_timestamp}"
+                f"maximum file timestamp: {dt.datetime.utcfromtimestamp(max_timestamp).isoformat()}"
             )
             update_last_processed_timestamp(s3, state_bucket, state_key, max_timestamp)
-        cur_processing += dt.timedelta(days=1)
+        cur_processing = (cur_processing + dt.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 @click.command()

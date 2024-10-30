@@ -4,6 +4,7 @@ import click
 
 
 def check_config(config: dict):
+    print(config)
     assert config["s3_bucket"]["uri"]
     assert config["s3_bucket"]["public_key"]
     assert config["s3_bucket"]["secret_key"]
@@ -16,7 +17,7 @@ def load_config(path: str):
     with open(path, "r") as f:
         config = json.load(f)
         check_config(config)
-        return
+        return config
 
 
 def get_last_processed_timestamp(s3, bucket, key):
