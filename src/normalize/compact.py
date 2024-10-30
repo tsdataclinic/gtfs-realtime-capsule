@@ -87,23 +87,14 @@ def compact_files(
                     f"Compacting partition {cur_processing.date()} for {message_type} in {message_type_prefix}"
                 )
                 compact(s3_fs, message_type_prefix, compacted_prefix, cur_processing)
-        cur_processing += dt.timedelta(days=1)
-    for message_type in ["trip-updates", "vehicles", "alert"]:
-        message_type_prefix = os.path.join(normalized_prefix, message_type)
-        if _s3_prefix_exists(
-            dataset_bucket, os.path.join(dataset_key, message_type), s3
-        ):
-            LOGGER.info(
-                f"Compacting partition {cur_processing.date()} for {message_type} in {message_type_prefix}"
-            )
-            compact(s3_fs, normalized_prefix, compacted_prefix, cur_processing)
-    LOGGER.info(
-        f"Updating last compacted timestamp to "
-        f"last date processed: {cur_processing.timestamp()}"
-    )
-    update_last_processed_timestamp(
-        s3, compact_state_bucket, compacted_state_file, cur_processing.timestamp()
-    )
+        cur_processing = (cur_processing + dt.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        LOGGER.info(
+            f"Updating last compacted timestamp to "
+            f"last date processed: {cur_processing.timestamp()}"
+        )
+        update_last_processed_timestamp(
+            s3, compact_state_bucket, compacted_state_file, cur_processing.timestamp()
+        )
 
 
 @click.command()
