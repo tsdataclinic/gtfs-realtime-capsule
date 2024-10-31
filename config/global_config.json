@@ -1,8 +1,8 @@
 {
   "s3_bucket": {
-    "uri": "dataclinic-gtfs-rt",
-    "public_key": "",
-    "secret_key": "",
+    "uri": "PUT_IN_YOUR_BUCKET_NAME",
+    "public_key": "FILL_THIS_IN",
+    "secret_key": "FILL_THIS_IN",
     "retries": {
       "max_attempts": 3,
       "mode": "standard"
@@ -10,6 +10,6 @@
   },
   "mobilitydatabase": {
     "url": "https://api.mobilitydatabase.org/v1",
-    "token": ""
+    "token": "FILL_THIS_IN"
   }
 }
