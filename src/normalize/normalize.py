@@ -1,15 +1,21 @@
 import datetime as dt
-import json
 import logging
 import os.path
 import time
 
 import click
 import pyarrow as pa
+import pytz
 import s3fs
 import structlog
 from dateutil import parser
 
+from norm_utils import (
+    update_last_processed_timestamp,
+    validate_date,
+    get_last_processed_timestamp,
+    load_config,
+)
 from gtfs_realtime_pb2 import FeedMessage
 from src.normalize.parquet_utils import write_data, add_time_columns
 from src.normalize.protobuf_utils import protobuf_objects_to_pyarrow_table
@@ -27,39 +33,6 @@ LOGGER = structlog.get_logger()
 SCRIPT_DIR = os.path.dirname(__file__)
 CONFIG_DIR = f"{SCRIPT_DIR}/../../config"
 DATA_DIR = f"{SCRIPT_DIR}/../../data"
-
-
-def check_config(config: dict):
-    assert config["s3_bucket"]["uri"]
-    assert config["s3_bucket"]["public_key"]
-    assert config["s3_bucket"]["secret_key"]
-    retries_config = config["s3_bucket"].get("retries")
-    if retries_config:
-        assert retries_config["mode"], ("mode must be specified for enabling "
-                                        "retry")
-
-
-def load_config(path: str):
-    with open(path, "r") as f:
-        config = json.load(f)
-        check_config(config)
-        return config
-
-
-def get_last_processed_timestamp(s3, bucket, key):
-    try:
-        response = s3.get_object(Bucket=bucket, Key=key)
-        return dt.datetime.fromtimestamp(
-            float(json.loads(response["Body"].read())["last_processed"])
-        )
-    except s3.exceptions.NoSuchKey:
-        return None
-
-
-def update_last_processed_timestamp(s3, bucket, key, timestamp):
-    s3.put_object(
-        Bucket=bucket, Key=key, Body=json.dumps({"last_processed": timestamp})
-    )
 
 
 def normalize_raw_feed(raw_input, cur_time, cur_date):
@@ -90,9 +63,7 @@ def normalize_raw_feed(raw_input, cur_time, cur_date):
         else None
     )
     alerts_pa = (
-        protobuf_objects_to_pyarrow_table(
-            [x[1] for x in alerts]
-        ) if alerts else None
+        protobuf_objects_to_pyarrow_table([x[1] for x in alerts]) if alerts else None
     )
 
     if trip_updates_pa:
@@ -102,8 +73,7 @@ def normalize_raw_feed(raw_input, cur_time, cur_date):
         trip_updates_pa = add_time_columns(trip_updates_pa, cur_time, cur_date)
 
     if vehicles_pa:
-        vehicles_pa = vehicles_pa.add_column(0, "id",
-                                             [[x[0] for x in vehicles]])
+        vehicles_pa = vehicles_pa.add_column(0, "id", [[x[0] for x in vehicles]])
         vehicles_pa = add_time_columns(vehicles_pa, cur_time, cur_date)
 
     if alerts_pa:
@@ -113,12 +83,9 @@ def normalize_raw_feed(raw_input, cur_time, cur_date):
     return trip_updates_pa, vehicles_pa, alerts_pa
 
 
-def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date,
-                state_file):
-    source_bucket, source_key = source_prefix.replace("s3://", "").split(
-        "/", 1)
-    state_bucket, state_key = state_file.replace("s3://", "").split(
-        "/", 1)
+def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_file):
+    source_bucket, source_key = source_prefix.replace("s3://", "").split("/", 1)
+    state_bucket, state_key = state_file.replace("s3://", "").split("/", 1)
 
     last_processed = get_last_processed_timestamp(s3, state_bucket, state_key)
     if last_processed:
@@ -133,9 +100,9 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date,
     # List objects in the source bucket
     paginator = s3.get_paginator("list_objects_v2")
 
-    cur_date = dt.datetime.now()
-    cur_processing = last_processed
-    while cur_processing < cur_date:
+    cur_time = dt.datetime.utcnow().astimezone(pytz.UTC)
+    cur_processing = last_processed.astimezone(pytz.UTC)
+    while cur_processing <= cur_time:
         date_partition = os.path.join(
             source_key,
             str(cur_processing.year),
@@ -143,19 +110,17 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date,
             str(cur_processing.day),
         )
         LOGGER.info(f"Processing date: {date_partition}")
-        max_timestamp = last_processed.timestamp()
+        max_timestamp = cur_processing.timestamp()
 
         trip_updates_pa, vehicles_pa, alerts_pa = None, None, None
 
-        for page in paginator.paginate(Bucket=source_bucket,
-                                       Prefix=date_partition):
+        for page in paginator.paginate(Bucket=source_bucket, Prefix=date_partition, PaginationConfig={'PageSize': 60}):
             for obj in page.get("Contents", []):
                 key = obj["Key"]
                 if key.endswith(".binpb"):
                     # Check if this file is newer than the last processed file
-                    file_write_time = float(
-                        key.split("/")[-1].removesuffix(".binpb"))
-                    if file_write_time > last_processed.timestamp():
+                    file_write_time = float(key.split("/")[-1].removesuffix(".binpb"))
+                    if file_write_time > cur_processing.timestamp():
                         LOGGER.info(f"Processing file: {key}")
                         # Download the file
                         response = s3.get_object(Bucket=source_bucket, Key=key)
@@ -170,8 +135,7 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date,
                         )
 
                         trip_updates_pa = (
-                            pa.concat_tables(
-                                [trip_updates_pa, cur_trip_updates_pa])
+                            pa.concat_tables([trip_updates_pa, cur_trip_updates_pa])
                             if trip_updates_pa
                             else cur_trip_updates_pa
                         )
@@ -190,18 +154,15 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date,
 
             if trip_updates_pa:
                 s3_uri = f"{destination_prefix}/trip-updates"
-                LOGGER.info(
-                    f"Writing {trip_updates_pa.num_rows} entries to {s3_uri}")
+                LOGGER.info(f"Writing {trip_updates_pa.num_rows} entries to {s3_uri}")
                 write_data(s3_fs, trip_updates_pa, s3_uri)
             if vehicles_pa:
                 s3_uri = f"{destination_prefix}/vehicles"
-                LOGGER.info(
-                    f"Writing {vehicles_pa.num_rows} entries to {s3_uri}")
+                LOGGER.info(f"Writing {vehicles_pa.num_rows} entries to {s3_uri}")
                 write_data(s3_fs, vehicles_pa, s3_uri)
             if alerts_pa:
                 s3_uri = f"{destination_prefix}/alerts"
-                LOGGER.info(
-                    f"Writing {alerts_pa.num_rows} entries to {s3_uri}")
+                LOGGER.info(f"Writing {alerts_pa.num_rows} entries to {s3_uri}")
                 write_data(s3_fs, alerts_pa, s3_uri)
 
             # Update the last processed timestamp
@@ -212,27 +173,14 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date,
                 )
             LOGGER.info(
                 f"Updating last processed timestamp to "
-                f"maximum file timestamp: {max_timestamp}"
+                f"maximum file timestamp: {dt.datetime.utcfromtimestamp(max_timestamp).isoformat()}"
             )
-            update_last_processed_timestamp(s3, state_bucket, state_key,
-                                            max_timestamp)
-        cur_processing += dt.timedelta(days=1)
-
-
-def validate_date(ctx, param, value):
-    if value is None:  # If no input is provided, use today's date
-        return str(dt.date.today())
-    try:
-        # Attempt to parse the date with the expected format
-        return str(dt.datetime.strptime(value, "%Y%m%d").date())
-    except ValueError:
-        # Raise a BadParameter error if the format is incorrect
-        raise click.BadParameter("Date must be in YYYYMMDD format.")
+            update_last_processed_timestamp(s3, state_bucket, state_key, max_timestamp)
+        cur_processing = (cur_processing + dt.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 @click.command()
-@click.option("-f", "--feed_id", required=True, type=str,
-              help="feed ID to be scraped")
+@click.option("-f", "--feed_id", required=True, type=str, help="feed ID to be scraped")
 @click.option(
     "-c",
     "--config_path",
@@ -257,8 +205,8 @@ def validate_date(ctx, param, value):
     callback=validate_date,
     default=None,
     help="If no state-file is found, the date to "
-         "start searching for files. Defaults to "
-         "today's date if not provided.",
+    "start searching for files. Defaults to "
+    "today's date if not provided.",
 )
 @click.option(
     "--state-file",
@@ -266,17 +214,16 @@ def validate_date(ctx, param, value):
     help="S3 path to store the state (e.g., s3://bucket/state.json)",
 )
 @click.option(
-    "--interval", type=int, default=60,
-    help="Run interval in seconds (default: 60)"
+    "--interval", type=int, default=60, help="Run interval in seconds (default: 60)"
 )
 def main(
-        feed_id,
-        config_path,
-        source_prefix,
-        destination_prefix,
-        start_date,
-        state_file,
-        interval,
+    feed_id,
+    config_path,
+    source_prefix,
+    destination_prefix,
+    start_date,
+    state_file,
+    interval,
 ):
     config = load_config(config_path)
     s3_bucket_path = f"s3://{config['s3_bucket']['uri']}"
@@ -289,15 +236,13 @@ def main(
 
     s3 = create_s3_client(config["s3_bucket"])
     s3_fs = s3fs.S3FileSystem(
-        key=config["s3_bucket"]["public_key"],
-        secret=config["s3_bucket"]["secret_key"]
+        key=config["s3_bucket"]["public_key"], secret=config["s3_bucket"]["secret_key"]
     )
     while True:
         parse_files(
             s3=s3,
             s3_fs=s3_fs,
-            source_prefix=os.path.join(f"{s3_bucket_path}/{source_prefix}",
-                                       feed_id),
+            source_prefix=os.path.join(f"{s3_bucket_path}/{source_prefix}", feed_id),
             destination_prefix=os.path.join(
                 f"{s3_bucket_path}/{destination_prefix}", feed_id
             ),
