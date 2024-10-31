@@ -1,22 +1,17 @@
 # gtfs-realtime-capsule
-Tool to archive GTFS-rt data
+GTFS-RT (General Transit Feed Specification - Real-Time) is an extension of the GTFS format that enables transit agencies to share live, up-to-the-minute updates about their services, such as delays, vehicle locations, or service disruptions.
+
+This is a tool to scrape, normalize and archive GTFS-rt data.
+
+# Setup
+```shell
+git clone https://github.com/tsdataclinic/gtfs-realtime-capsule.git
+git branch  # make sure you are on the main branch
+```
 
 # HOW-TOs
-## How to start local development docker
-See the [docker doc](docker/README.md)
+* [How to start local development docker container](doc/howtos/docker.md)
+* [How to run scraper and normalizer](doc/howtos/run.md)
+* [How to implement your feeds](doc/howtos/develop.md)
 
-## How to run the scraper and normalizer
-### Prerequisite
-1. Update `config/config.json` to include related credentials
-2. Make sure the implementation and metadata json of the feed you want to scrape is in `src/scraper/feeds/` 
-### Via docker compose
-```shell
-pwd
-# need to run at repo root directory 
-make local-prod-generate-compose FEEDS="YOUR_FEED_1 YOUR_FEED_2 YOUR_FEED_3"
-# To run for all avilable feeds:
-# make local-prod-generate-compose FEEDS="*"
-
-# a dynamic docker-compose.yaml will be generated
-make local-prod-run
-```
+# FAQs

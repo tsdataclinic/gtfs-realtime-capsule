@@ -17,6 +17,7 @@ local-dev-shell:
 local-dev-down:
 	docker stop local-dev
 	docker rm local-dev
+local-dev-restart: local-dev-down local-dev-build local-dev-run
 
 local-prod-generate-compose:
 	python3 ./docker/prod/generate_compose.py $(FEEDS)
