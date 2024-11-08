@@ -118,7 +118,7 @@ Instructions for implementing your custom feeds. [How to implement your feeds](d
 
 ## Support
 
-[Common Errors](doc/commonerros.md.md): Address common queries and troubleshooting tips.
+[Common Errors](doc/common_errors.md): Address common queries and troubleshooting tips.
 
 For other questions or support, please create an issue.
 
