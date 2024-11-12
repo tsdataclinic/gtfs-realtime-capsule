@@ -1,5 +1,5 @@
 # GTFS-Realtime-Capsule
-**gtfs-realtime-capsule** is a command-line tool that scrapes, normalizes, and archives real-time public transit data. Inspired by the BusObservatory by Prof. Anthony Townsend of Urban Tech Hub @ Cornell Tech, the goal of this project is to make it seamless for anyone to help archive realtime transit data and analytics and make it publicly available though a distributed database. 
+**gtfs-realtime-capsule** is a command-line tool that scrapes, normalizes, and archives real-time public transit data. Inspired by the [BusObservatory API](https://api.busobservatory.org/) by Prof. Anthony Townsend of [Jacobs Urban Tech Hub at Cornell Tech](https://urban.tech.cornell.edu/), the goal of this project is to make it seamless for anyone to help archive realtime transit data and analytics and make it publicly available though a distributed database. 
 
 ## Table of Contents
 
