@@ -126,7 +126,7 @@ For other questions or support, please create an issue.
 
 ### Improve Documentation
 
-[Improve documentation](doc/docs_strategy.md).
+Improve documentation.
 
 ## Contributing
 
