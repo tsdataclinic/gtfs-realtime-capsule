@@ -110,17 +110,19 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
             str(cur_processing.day),
         )
         LOGGER.info(f"Processing date: {date_partition}")
-        max_timestamp = cur_processing.timestamp()
-
-        trip_updates_pa, vehicles_pa, alerts_pa = None, None, None
+        max_epoch_timestamp = cur_processing.timestamp()
 
         for page in paginator.paginate(Bucket=source_bucket, Prefix=date_partition, PaginationConfig={'PageSize': 60}):
+                trip_updates_pa = None
+            vehicles_pa = None
+            alerts_pa = None
+
             for obj in page.get("Contents", []):
                 key = obj["Key"]
                 if key.endswith(".binpb"):
                     # Check if this file is newer than the last processed file
-                    file_write_time = float(key.split("/")[-1].removesuffix(".binpb"))
-                    if file_write_time > cur_processing.timestamp():
+                    file_write_epoch_time = float(key.split("/")[-1].removesuffix(".binpb"))
+                    if file_write_epoch_time > cur_processing.timestamp():
                         LOGGER.info(f"Processing file: {key}")
                         # Download the file
                         response = s3.get_object(Bucket=source_bucket, Key=key)
@@ -150,7 +152,7 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
                             else cur_alerts_pa
                         )
 
-                    max_timestamp = max(max_timestamp, file_write_time)
+                    max_epoch_timestamp = max(max_epoch_timestamp, file_write_epoch_time)
 
             if trip_updates_pa:
                 s3_uri = f"{destination_prefix}/trip-updates"
@@ -166,16 +168,16 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
                 write_data(s3_fs, alerts_pa, s3_uri)
 
             # Update the last processed timestamp
-            if max_timestamp == last_processed:
+            if max_epoch_timestamp == last_processed:
                 LOGGER.warning(
                     f"No data found in partition: {date_partition} "
                     f"- is this expected?"
                 )
             LOGGER.info(
                 f"Updating last processed timestamp to "
-                f"maximum file timestamp: {dt.datetime.utcfromtimestamp(max_timestamp).isoformat()}"
+                f"maximum file timestamp: {dt.datetime.utcfromtimestamp(max_epoch_timestamp).isoformat()}"
             )
-            update_last_processed_timestamp(s3, state_bucket, state_key, max_timestamp)
+            update_last_processed_timestamp(s3, state_bucket, state_key, max_epoch_timestamp)
         cur_processing = (cur_processing + dt.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
 
 
