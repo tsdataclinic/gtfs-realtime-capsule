@@ -113,7 +113,7 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
         max_epoch_timestamp = cur_processing.timestamp()
 
         for page in paginator.paginate(Bucket=source_bucket, Prefix=date_partition, PaginationConfig={'PageSize': 60}):
-                trip_updates_pa = None
+            trip_updates_pa = None
             vehicles_pa = None
             alerts_pa = None
 
