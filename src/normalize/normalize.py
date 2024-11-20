@@ -112,7 +112,7 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
         LOGGER.info(f"Processing date: {date_partition}")
         max_epoch_timestamp = cur_processing.timestamp()
 
-        for page in paginator.paginate(Bucket=source_bucket, Prefix=date_partition, PaginationConfig={'PageSize': 60}):
+        for page in paginator.paginate(Bucket=source_bucket, Prefix=date_partition, PaginationConfig={'PageSize': 10}):
             trip_updates_pa = None
             vehicles_pa = None
             alerts_pa = None
@@ -156,15 +156,27 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
 
             if trip_updates_pa:
                 s3_uri = f"{destination_prefix}/trip-updates"
-                LOGGER.info(f"Writing {trip_updates_pa.num_rows} entries to {s3_uri}")
+                time_range = pa.compute.min_max(trip_updates_pa['time'])
+                LOGGER.info(
+                    f"Writing {trip_updates_pa.num_rows} entries to {s3_uri}. "
+                    f"Min timestamp {time_range['min']}, max timestamp {time_range['max']}"
+                )
                 write_data(s3_fs, trip_updates_pa, s3_uri)
             if vehicles_pa:
                 s3_uri = f"{destination_prefix}/vehicles"
-                LOGGER.info(f"Writing {vehicles_pa.num_rows} entries to {s3_uri}")
+                time_range = pa.compute.min_max(vehicles_pa['time'])
+                LOGGER.info(
+                    f"Writing {vehicles_pa.num_rows} entries to {s3_uri}. "
+                    f"Min timestamp {time_range['min']}, max timestamp {time_range['max']}"
+                )
                 write_data(s3_fs, vehicles_pa, s3_uri)
             if alerts_pa:
                 s3_uri = f"{destination_prefix}/alerts"
-                LOGGER.info(f"Writing {alerts_pa.num_rows} entries to {s3_uri}")
+                time_range = pa.compute.min_max(alerts_pa['time'])
+                LOGGER.info(
+                    f"Writing {alerts_pa.num_rows} entries to {s3_uri}. "
+                    f"Min timestamp {time_range['min']}, max timestamp {time_range['max']}"
+                )
                 write_data(s3_fs, alerts_pa, s3_uri)
 
             # Update the last processed timestamp
