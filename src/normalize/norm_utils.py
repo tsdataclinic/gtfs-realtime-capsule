@@ -4,7 +4,6 @@ import click
 
 
 def check_config(config: dict):
-    print(config)
     assert config["s3_bucket"]["uri"]
     assert config["s3_bucket"]["public_key"]
     assert config["s3_bucket"]["secret_key"]
@@ -23,8 +22,9 @@ def load_config(path: str):
 def get_last_processed_timestamp(s3, bucket, key):
     try:
         response = s3.get_object(Bucket=bucket, Key=key)
+        last_processed_epoch_timestamp = float(json.loads(response["Body"].read())["last_processed"])
         return dt.datetime.fromtimestamp(
-            float(json.loads(response["Body"].read())["last_processed"])
+            last_processed_epoch_timestamp, dt.timezone.utc
         )
     except s3.exceptions.NoSuchKey:
         return None
