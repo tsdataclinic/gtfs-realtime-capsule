@@ -91,17 +91,17 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
     if last_processed:
         LOGGER.info(f"Loaded last_processed timestamp of {last_processed}")
     else:
+        last_processed = pytz.UTC.localize(parser.parse(start_date))
         LOGGER.info(
             f"No state information found at {state_file},"
-            f" defaulting `last_processed={start_date}"
+            f" defaulting `last_processed={last_processed}"
         )
-        last_processed = parser.parse(start_date)
 
     # List objects in the source bucket
     paginator = s3.get_paginator("list_objects_v2")
 
-    cur_time = dt.datetime.utcnow().astimezone(pytz.UTC)
-    cur_processing = last_processed.astimezone(pytz.UTC)
+    cur_time = pytz.UTC.localize(dt.datetime.utcnow())
+    cur_processing = last_processed
     while cur_processing <= cur_time:
         date_partition = os.path.join(
             source_key,
@@ -112,7 +112,7 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
         LOGGER.info(f"Processing date: {date_partition}")
         max_epoch_timestamp = cur_processing.timestamp()
 
-        for page in paginator.paginate(Bucket=source_bucket, Prefix=date_partition, PaginationConfig={'PageSize': 60}):
+        for page in paginator.paginate(Bucket=source_bucket, Prefix=date_partition, PaginationConfig={'PageSize': 30}):
             trip_updates_pa = None
             vehicles_pa = None
             alerts_pa = None
@@ -154,29 +154,45 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
 
                     max_epoch_timestamp = max(max_epoch_timestamp, file_write_epoch_time)
 
+            new_data_written = False
             if trip_updates_pa:
                 s3_uri = f"{destination_prefix}/trip-updates"
-                LOGGER.info(f"Writing {trip_updates_pa.num_rows} entries to {s3_uri}")
+                time_range = pa.compute.min_max(trip_updates_pa['time'])
+                LOGGER.info(
+                    f"Writing {trip_updates_pa.num_rows} entries to {s3_uri}. "
+                    f"Min timestamp {time_range['min']}, max timestamp {time_range['max']}"
+                )
                 write_data(s3_fs, trip_updates_pa, s3_uri)
+                new_data_written = True
             if vehicles_pa:
                 s3_uri = f"{destination_prefix}/vehicles"
-                LOGGER.info(f"Writing {vehicles_pa.num_rows} entries to {s3_uri}")
+                time_range = pa.compute.min_max(vehicles_pa['time'])
+                LOGGER.info(
+                    f"Writing {vehicles_pa.num_rows} entries to {s3_uri}. "
+                    f"Min timestamp {time_range['min']}, max timestamp {time_range['max']}"
+                )
                 write_data(s3_fs, vehicles_pa, s3_uri)
+                new_data_written = True
             if alerts_pa:
                 s3_uri = f"{destination_prefix}/alerts"
-                LOGGER.info(f"Writing {alerts_pa.num_rows} entries to {s3_uri}")
+                time_range = pa.compute.min_max(alerts_pa['time'])
+                LOGGER.info(
+                    f"Writing {alerts_pa.num_rows} entries to {s3_uri}. "
+                    f"Min timestamp {time_range['min']}, max timestamp {time_range['max']}"
+                )
                 write_data(s3_fs, alerts_pa, s3_uri)
+                new_data_written = True
 
             # Update the last processed timestamp
             if max_epoch_timestamp == last_processed:
                 LOGGER.warning(
-                    f"No data found in partition: {date_partition} "
-                    f"- is this expected?"
+                    f"No new data found in partition: {date_partition} - is this expected?"
                 )
-            LOGGER.info(
-                f"Updating last processed timestamp to "
-                f"maximum file timestamp: {dt.datetime.utcfromtimestamp(max_epoch_timestamp).isoformat()}"
-            )
+            if new_data_written:
+                LOGGER.info(
+                    f"Updating last processed timestamp to "
+                    f"maximum file timestamp: {dt.datetime.utcfromtimestamp(max_epoch_timestamp).isoformat()}"
+                )
             update_last_processed_timestamp(s3, state_bucket, state_key, max_epoch_timestamp)
         cur_processing = (cur_processing + dt.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
 
