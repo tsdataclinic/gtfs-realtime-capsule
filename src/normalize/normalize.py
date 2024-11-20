@@ -195,8 +195,9 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
 
     if not global_data_written:
         LOGGER.warning(
-            f"No new data written - is this expected?"
+            "No new data written - is this expected?"
         )
+
 
 @click.command()
 @click.option("-f", "--feed_id", required=True, type=str, help="feed ID to be scraped")
