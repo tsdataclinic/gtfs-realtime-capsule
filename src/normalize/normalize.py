@@ -102,6 +102,8 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
 
     cur_time = pytz.UTC.localize(dt.datetime.utcnow())
     cur_processing = last_processed
+
+    global_data_written = False
     while cur_processing <= cur_time:
         date_partition = os.path.join(
             source_key,
@@ -182,13 +184,8 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
                 )
                 write_data(s3_fs, alerts_pa, s3_uri)
                 new_data_written = True
-
-            # Update the last processed timestamp
-            if max_epoch_timestamp == last_processed:
-                LOGGER.warning(
-                    f"No new data found in partition: {date_partition} - is this expected?"
-                )
             if new_data_written:
+                global_data_written = True
                 LOGGER.info(
                     f"Updating last processed timestamp to "
                     f"maximum file timestamp: {dt.datetime.utcfromtimestamp(max_epoch_timestamp).isoformat()}"
@@ -196,6 +193,10 @@ def parse_files(s3, s3_fs, source_prefix, destination_prefix, start_date, state_
             update_last_processed_timestamp(s3, state_bucket, state_key, max_epoch_timestamp)
         cur_processing = (cur_processing + dt.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
 
+    if not global_data_written:
+        LOGGER.warning(
+            f"No new data written - is this expected?"
+        )
 
 @click.command()
 @click.option("-f", "--feed_id", required=True, type=str, help="feed ID to be scraped")
