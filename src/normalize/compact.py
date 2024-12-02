@@ -16,6 +16,8 @@ from norm_utils import (
     load_config,
 )
 from src.util.s3_client import create_s3_client
+from botocore.config import Config
+from boto3.session import Session
 
 structlog.configure(
     processors=[
@@ -156,10 +158,28 @@ def main(
     if not compacted_state_file:  # set default
         compacted_state_file = f"{s3_bucket_path}/state/compact/{feed_id}"
 
-    s3 = create_s3_client(config["s3_bucket"])
-    s3_fs = s3fs.S3FileSystem(
-        key=config["s3_bucket"]["public_key"], secret=config["s3_bucket"]["secret_key"]
+    session = Session()
+
+    # Create a config object for boto3 client
+    boto_config = Config(
+        retries=config['s3_bucket'].get('retries'),
+        signature_version=config['s3_bucket'].get('signature_version', 's3v4')
     )
+
+    s3 = session.client(
+        's3',
+        aws_access_key_id=config['s3_bucket']['public_key'],
+        aws_secret_access_key=config['s3_bucket']['secret_key'],
+        endpoint_url=config['s3_bucket'].get('endpoint_url'),  # Use the custom endpoint
+        config=boto_config
+    )
+
+    s3_fs = s3fs.S3FileSystem(
+        key=config['s3_bucket']['public_key'],
+        secret=config['s3_bucket']['secret_key'],
+        client=s3  # Pass the custom S3 client
+    )
+
     while True:
         compact_files(
             s3=s3,
