@@ -274,7 +274,7 @@ def main(
     s3_fs = s3fs.S3FileSystem(
         key=config["s3_bucket"]["public_key"],
         secret=config["s3_bucket"]["secret_key"],
-        client=s3
+        client_kwargs={'endpoint_url': config["s3_bucket"].get("endpoint_url")}
     )
 
     while True:

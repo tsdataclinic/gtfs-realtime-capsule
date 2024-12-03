@@ -3,8 +3,8 @@
     "uri": "PUT_IN_YOUR_BUCKET_NAME",
     "public_key": "FILL_THIS_IN",
     "secret_key": "FILL_THIS_IN",
-    "endpoint_url": "YOUR_ENDPOINT_URL",  // Add this line
-    "signature_version": "s3v4",  // Optionally add this if needed
+    "endpoint_url": "YOUR_ENDPOINT_URL",
+    "signature_version": "s3v4",
     "retries": {
       "max_attempts": 3,
       "mode": "standard"
