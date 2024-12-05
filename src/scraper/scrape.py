@@ -66,10 +66,10 @@ def create_custom_s3_client(config: dict):
 
     # Create a client using the session
     s3 = session.client(
-        's3',
-        aws_access_key_id=config['s3_bucket']['public_key'],
-        aws_secret_access_key=config['s3_bucket']['secret_key'],
-        endpoint_url=config['s3_bucket'].get('endpoint_url'),  # Use the custom endpoint
+        "s3",
+        aws_access_key_id=config["s3_bucket"]["public_key"],
+        aws_secret_access_key=config["s3_bucket"]["secret_key"],
+        endpoint_url=config["s3_bucket"].get("endpoint_url"),  # Use the custom endpoint
         config=boto_config
     )
 

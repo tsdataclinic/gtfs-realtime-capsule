@@ -172,10 +172,10 @@ def main(
     )
 
     s3 = session.client(
-        's3',
-        aws_access_key_id=config['s3_bucket']['public_key'],
-        aws_secret_access_key=config['s3_bucket']['secret_key'],
-        endpoint_url=config['s3_bucket'].get('endpoint_url'),  # Use the custom endpoint
+        "s3",
+        aws_access_key_id=config["s3_bucket"]["public_key"],
+        aws_secret_access_key=config["s3_bucket"]["secret_key"],
+        endpoint_url=config["s3_bucket"].get("endpoint_url"),  # Use the custom endpoint
         config=boto_config
     )
 
@@ -184,6 +184,7 @@ def main(
         secret=config["s3_bucket"]["secret_key"],
         client_kwargs={'endpoint_url': config["s3_bucket"].get("endpoint_url")}
     )
+
 
     while True:
         compact_files(
