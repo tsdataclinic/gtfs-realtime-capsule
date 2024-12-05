@@ -5,11 +5,13 @@ services:
       context: .
       dockerfile: ./docker/prod/Dockerfile
     image: local-prod
+    restart: unless-stopped
     command: ["sh", "-c", "python3 /local/src/scraper/scrape.py -f {{ feed }}"]
   {{ feed }}-normalizer:
     build:
       context: .
       dockerfile: ./docker/prod/Dockerfile
     image: local-prod
+    restart: unless-stopped
     command: ["sh", "-c", "python3 /local/src/normalize/normalize.py -f {{ feed }}"]
 {% endfor %}
