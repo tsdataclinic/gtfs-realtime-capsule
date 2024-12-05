@@ -6,6 +6,10 @@ import time
 import click
 import s3fs
 import structlog
+
+from botocore.config import Config
+from boto3.session import Session
+
 from dateutil import parser
 
 from parquet_utils import compact
@@ -16,8 +20,6 @@ from norm_utils import (
     load_config,
 )
 from src.util.s3_client import create_s3_client
-from botocore.config import Config
-from boto3.session import Session
 
 structlog.configure(
     processors=[
@@ -162,7 +164,10 @@ def main(
 
     # Create a config object for boto3 client
     boto_config = Config(
-        retries=config['s3_bucket'].get('retries'),
+            retries={
+        'max_attempts': config['s3_bucket']['retries']['max_attempts'],
+        'mode': config['s3_bucket']['retries']['mode']
+    },
         signature_version=config['s3_bucket'].get('signature_version', 's3v4')
     )
 

@@ -259,7 +259,10 @@ def main(
 
     # Create a config object for boto3 client
     boto_config = Config(
-        retries=config["s3_bucket"].get("retries"),
+            retries={
+        'max_attempts': config['s3_bucket']['retries']['max_attempts'],
+        'mode': config['s3_bucket']['retries']['mode']
+    },
         signature_version=config["s3_bucket"].get("signature_version", "s3v4")
     )
 
