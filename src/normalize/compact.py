@@ -6,6 +6,10 @@ import time
 import click
 import s3fs
 import structlog
+
+from botocore.config import Config
+from boto3.session import Session
+
 from dateutil import parser
 
 from parquet_utils import compact
@@ -156,10 +160,32 @@ def main(
     if not compacted_state_file:  # set default
         compacted_state_file = f"{s3_bucket_path}/state/compact/{feed_id}"
 
-    s3 = create_s3_client(config["s3_bucket"])
-    s3_fs = s3fs.S3FileSystem(
-        key=config["s3_bucket"]["public_key"], secret=config["s3_bucket"]["secret_key"]
+    session = Session()
+
+    # Create a config object for boto3 client
+    boto_config = Config(
+            retries={
+        'max_attempts': config['s3_bucket']['retries']['max_attempts'],
+        'mode': config['s3_bucket']['retries']['mode']
+    },
+        signature_version=config['s3_bucket'].get('signature_version', 's3v4')
     )
+
+    s3 = session.client(
+        "s3",
+        aws_access_key_id=config["s3_bucket"]["public_key"],
+        aws_secret_access_key=config["s3_bucket"]["secret_key"],
+        endpoint_url=config["s3_bucket"].get("endpoint_url"),  # Use the custom endpoint
+        config=boto_config
+    )
+
+    s3_fs = s3fs.S3FileSystem(
+        key=config["s3_bucket"]["public_key"],
+        secret=config["s3_bucket"]["secret_key"],
+        client_kwargs={'endpoint_url': config["s3_bucket"].get("endpoint_url")}
+    )
+
+
     while True:
         compact_files(
             s3=s3,

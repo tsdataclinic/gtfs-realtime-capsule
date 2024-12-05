@@ -62,10 +62,13 @@ It is a rich dataset, however the feeds are ephemeral. With each update, the fee
 ### Config
 
 Update the global config file.
+1. Copy [config/global_config.json.sample](config/global_config.json.sample) to config/global_config.json
 1. Open the [config/global_config.json](config/global_config.json) in your file editor.
 1. Update the `s3_bucket.uri` field to the uri of your Amazon S3 bucket.
 1. Update the `s3_bucket.public_key` field to the public key of your Amazon S3 bucket.
 1. Update the `s3_bucket.secret_key` field to the secret key of your Amazon S3 bucket.
+1. Update the `endpoint_url` field to the endpoint url of your S3 bucket destination. This field is only necessary if you are not using AWS.
+1. Update the `signature_version` field to the signature version of your S3 bucket. This field is only necessary if you are not using AWS.
 1. Update the `mobilitydatabase.token` field to the API key you requested from [Mobility Database](https://mobilitydatabase.org/).
 
 
