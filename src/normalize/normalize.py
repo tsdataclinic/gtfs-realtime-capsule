@@ -20,7 +20,8 @@ from gtfs_realtime_pb2 import FeedMessage
 from src.normalize.parquet_utils import write_data, add_time_columns
 from src.normalize.protobuf_utils import protobuf_objects_to_pyarrow_table
 from src.util.s3_client import create_s3_client
-
+from botocore.config import Config
+from boto3.session import Session
 structlog.configure(
     processors=[
         structlog.processors.add_log_level,
@@ -254,10 +255,31 @@ def main(
         LOGGER.info(f"Overriding argv {key}={val}")
         exec(key + f"={val}")
 
-    s3 = create_s3_client(config["s3_bucket"])
-    s3_fs = s3fs.S3FileSystem(
-        key=config["s3_bucket"]["public_key"], secret=config["s3_bucket"]["secret_key"]
+    session = Session()
+
+    # Create a config object for boto3 client
+    boto_config = Config(
+            retries={
+        'max_attempts': config['s3_bucket']['retries']['max_attempts'],
+        'mode': config['s3_bucket']['retries']['mode']
+    },
+        signature_version=config["s3_bucket"].get("signature_version", "s3v4")
     )
+
+    s3 = session.client(
+        "s3",
+        aws_access_key_id=config["s3_bucket"]["public_key"],
+        aws_secret_access_key=config["s3_bucket"]["secret_key"],
+        endpoint_url=config["s3_bucket"].get("endpoint_url"),  # Use the custom endpoint
+        config=boto_config
+    )
+
+    s3_fs = s3fs.S3FileSystem(
+        key=config["s3_bucket"]["public_key"],
+        secret=config["s3_bucket"]["secret_key"],
+        client_kwargs={'endpoint_url': config["s3_bucket"].get("endpoint_url")}
+    )
+
     while True:
         parse_files(
             s3=s3,
